@@ -5,7 +5,7 @@ clear all
 close all
 clc
 %linux
-addpath(genpath('/home/tavocardona/Documents/paths/gurobi'))%gurobi
+addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
 addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
 yalmip('clear')
 
@@ -32,7 +32,7 @@ L=6;%number of lanes
 Mmax=L-1;
 mmin=-L+1;
 e=1;
-Vd = 20;
+Vd = 40;
 Zd = 1;
 %------------estados deseados-----------
 % Zd = sdpvar(repmat(nv,1,1),repmat(1,1,1));%carril deseado
@@ -121,7 +121,7 @@ objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); %
 parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},b1};
 solutions_out = {[a{:}], [z{:}], [v{:}], [dz{:}], [a1], [D1]};
 
-controller1 = optimizer(constraints, objective,sdpsettings('solver','gurobi'),parameters_in,solutions_out);
+controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
 %------condiciones iniciales----------
 vel=[3; 15];% velociodad inicial
 zel=[6; 1]; %carril inicial
@@ -129,7 +129,7 @@ Vdes=[30; 20]; %velocidad deseada
 Zdes=[1; 2];
 %---distancia inicial de cada agente
 % disij= Zj-zi
-d12 = [40];
+d12 = [10];
 dis21 = [-40];
 past_a=[0 0]';
 
@@ -185,7 +185,7 @@ for i = 1:20
 end
 
 
-% Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
+
 Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
 
 

@@ -32,7 +32,7 @@ figure(500)%create a window named "500"
 % Animate the robot motion
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Color', 'w');
-set(gcf,'Units','normalized','OuterPosition',[0 0 2 0.5]);%tamaño del grafico
+set(gcf,'Units','normalized','OuterPosition',[0 0 1 0.5]);%tamaño del grafico
 
 xp_1=[T*vphist(1,:)];
 xp_2=dhist(1:(size(vphist,2)));
@@ -78,7 +78,7 @@ hold on;
     %figure(500)
     ylabel('$y$-position (m)','interpreter','latex','FontSize',fontsize_labels)
     xlabel('$x$-position (m)','interpreter','latex','FontSize',fontsize_labels)
-    axis([-0.2 100 -0.2 6])%Axis description
+    axis([-0.2 200 -0.2 6])%Axis description
     pause(0.1)
     box on;
     grid on
