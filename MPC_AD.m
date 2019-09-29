@@ -4,6 +4,11 @@
 clear all
 close all
 clc
+%----------pc casa
+
+
+
+%---------laptop tavo
 %linux
 addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
 addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
