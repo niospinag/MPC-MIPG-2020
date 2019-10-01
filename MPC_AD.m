@@ -48,16 +48,14 @@ Zd = 2;
 v = sdpvar(repmat(nv,1,N+1),repmat(1,1,N+1));%velocidad
 v_2 = sdpvar(1);%velocidad
 a = sdpvar(repmat(nv,1,N),repmat(1,1,N));%aceleracion
-% dij = sdpvar(repmat(nv,1,N+1),repmat(nv-1,1,N+1));%distancia
 dis12 = sdpvar(repmat(1,1,N+1),repmat(1,1,N+1));%distancia
-% d21 = sdpvar(repmat(1,1,N+1),repmat(1,1,N+1));%distancia
 z = sdpvar(repmat(nv,1,N+1),repmat(1,1,N+1));%carril
 z_2 = sdpvar(1);%carril
 dz = sdpvar(repmat(1,1,N),repmat(1,1,N));%diferencia de carril
 
 
 a1 = binvar(1,1);
-g1 = binvar(1,1);
+% g1 = binvar(1,1);
 a2 = binvar(1,1);
 Aa = binvar(1,1);
 b1 = binvar(1,1);
@@ -91,7 +89,7 @@ for k = 1:N
                              
     constraints = [constraints, v{k+1} == v{k}+T*a{k}];%velocidad futura
     constraints = [constraints, dis12{k+1} == dis12{k}+T*(v_2-v{k})];
-    constraints = [constraints, dz{k} == z_2-z{k}];
+%     constraints = [constraints, dz{k} == z_2-z{k}];
     
 % ------------------------------------vehiculo 1-------------------------------    
 %------------------si dz=0  -------------------->>>    dij>= Ds----------------
@@ -101,13 +99,13 @@ constraints = [constraints, [D1(1)+D1(2)+D1(3)==1],
               implies( D1(2), [ a1==1, -0.2<=z_2-z{k} <=0.2 ]);
               implies( D1(3), [ a1==0, 0.2 <= z_2-z{k} ]) ];
 %.........................Beta...............................
-% 
-% constraints = [constraints, [B1(1)+B1(2)==1], 
-%               implies( B1(1), [ b1==0, dis12{k+1} <= 0]);
-%               implies( B1(2), [ b1==1, dis12{k+1} >= 0 ]) ];
-% % 
 
-% constraints = [constraints, implies(dis12{k} <= 0,b1)];
+constraints = [constraints,  [sum(B1)==1],
+              implies( B1(1), [  dis12{k+1} <= 0 , b1==0]);
+              implies( B1(2), [  dis12{k+1} >= 0 , b1==1])];
+
+
+% constraints = [constraints, implies(dis12{k} >= 0,b1)];
 
 
 % constraints = [constraints, [B1(1)+B1(2)==1], 
@@ -121,6 +119,8 @@ constraints = [constraints, [D1(1)+D1(2)+D1(3)==1],
 %               implies( G1(3), [ g1==0, 0.1 <= z_2-z{k+1} ]) ];          
           
 constraints = [constraints,  implies( Aa, dis12{k+1} >=Ds) ];
+
+
 %  constraints = [constraints, [sum(b1) == 1], implies(b1(1), [a1==1, dis12{k+1} >=Ds]);
 %                                                 implies(b1(2), [a1==0 ] )];
  
@@ -136,7 +136,7 @@ objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); %
   
 
 parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa};
-solutions_out = {[a{:}], [z{:}], [v{:}], [dz{:}],[a1],[b1],[dis12{:}]};
+solutions_out = {[a{:}], [z{:}], [v{:}],[a1],[dis12{:}],[B1]};
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
 %------condiciones iniciales----------
@@ -174,10 +174,10 @@ for i = 1:30
     A = solutions{1};past_a(1) = A(:,1);
     Z = solutions{2}; zel(1)=Z(:,1);zphist=[zphist; Z];
     V = solutions{3};vphist=[vphist; V];
-    DZ = solutions{4};
-    A1 = solutions{5};blogic=A1(:,1);
-    B1 = solutions{6};b1hist=[b1hist B1];
-    g1 = solutions{7};g1hist=[g1hist; g1];
+%     DZ = solutions{4};
+    A1 = solutions{4};blogic=A1(:,1);
+    g1 = solutions{5};    g1hist=[g1hist; g1];
+    B1 = solutions{6};    b1hist=[b1hist B1];
     
     if diagnostics == 1
         error('The problem is infeasible');
@@ -203,7 +203,7 @@ end
 
 
 
-Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
+% Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
 
 
 
