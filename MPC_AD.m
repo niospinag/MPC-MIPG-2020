@@ -31,14 +31,14 @@ R = eye(nv);
 N = 8;%horizon
 T = 0.5; %[s]
 Ds=3;%Safety distance
-V_max=60;
-A_max=3.2;
+V_max=40;
+A_max=20;
 L=6;%number of lanes
 Mmax=L-1;
 mmin=-L+1;
 e=1;
 Vd = 40;
-Zd = 1;
+Zd = 2;
 %------------estados deseados-----------
 % Zd = sdpvar(repmat(nv,1,1),repmat(1,1,1));%carril deseado
 % Vd = sdpvar(repmat(nv,1,1),repmat(1,1,1));%velocidad deseada
@@ -57,12 +57,16 @@ dz = sdpvar(repmat(1,1,N),repmat(1,1,N));%diferencia de carril
 
 
 a1 = binvar(1,1);
+g1 = binvar(1,1);
 a2 = binvar(1,1);
+Aa = binvar(1,1);
 b1 = binvar(1,1);
 % a2 = binvar(repmat(1,1,N),repmat(1,1,N));
 % a3 = binvar(repmat(1,1,N),repmat(1,1,N));
 
 D1 = binvar(3,1);
+G1 = binvar(3,1);
+B1 = binvar(2,1);
 % D2 = binvar(repmat(1,1,N),repmat(1,1,N));
 % D3 = binvar(repmat(1,1,N),repmat(1,1,N));
 p_a = sdpvar(1);
@@ -79,13 +83,9 @@ for k = 1:N
   % Feasible region
     constraints = [constraints ,  1 <= z{k}     <= L,
                                   1 <= z_2      <= L,%tome valores posibles
-%                                  1<= z{k+1}   <= L,
-                                   0<= v{k+1}   <= V_max,%no exceda las velocidades 
-%               -max([1 z_1{k}-[1]])<= z_1{k+1} <= min([L z_1{k}+[1]]),
+                                  0<= v{k+1}   <= V_max,%no exceda las velocidades 
                             z{k}-[1]<= z{k+1}   <=z{k}+[1],
- %                                -1<= z{k+1} - z{k} <= 1,%paso de a un carril
                            -A_max   <= a{k}     <= A_max,
-%                          -10000   <= d12{k}+T*(v{k}(2)-v{k}(1)) <= 10000,
                         -10000   <= dis12{k+1} <= 100000,
                            mmin  <= z_2-z{k+1}  <= Mmax];%paso de un carril
                              
@@ -95,27 +95,39 @@ for k = 1:N
     
 % ------------------------------------vehiculo 1-------------------------------    
 %------------------si dz=0  -------------------->>>    dij>= Ds----------------
-
-constraints = [constraints, [D1(1)+D1(2)+D1(3)==1],
-              implies( D1(1), [ a1==0, z_2-z{k} <=-0.2  ]);
+%.........................alpha...............................
+constraints = [constraints, [D1(1)+D1(2)+D1(3)==1], 
+              implies( D1(1), [ a1==0, z_2-z{k} <=-0.2 ]);
               implies( D1(2), [ a1==1, -0.2<=z_2-z{k} <=0.2 ]);
-              implies( D1(3), [ a1==0, 0.2 <= z_2-z{k} ])];
-                              
-% constraints = [constraints,a2==a1];          
-constraints = [constraints,  implies( b1, dis12{k+1} >=Ds) ];
+              implies( D1(3), [ a1==0, 0.2 <= z_2-z{k} ]) ];
+%.........................Beta...............................
+% 
+% constraints = [constraints, [B1(1)+B1(2)==1], 
+%               implies( B1(1), [ b1==0, dis12{k+1} <= 0]);
+%               implies( B1(2), [ b1==1, dis12{k+1} >= 0 ]) ];
+% % 
+
+% constraints = [constraints, implies(dis12{k} <= 0,b1)];
+
+
+% constraints = [constraints, [B1(1)+B1(2)==1], 
+%               implies([  dis12{k} >=0 ], B1(1));
+%               implies([  dis12{k} <=0 ], B1(2)) ];
+% %  
+% %.........................Gamma...............................
+% constraints = [constraints, [G1(1)+G1(2)+G1(3)==1], 
+%               implies( G1(1), [ g1==0, z_2-z{k+1} <=-0.1 ]);
+%               implies( G1(2), [ g1==1, -0.1<=z_2-z{k+1} <=0.2 ]);
+%               implies( G1(3), [ g1==0, 0.1 <= z_2-z{k+1} ]) ];          
+          
+constraints = [constraints,  implies( Aa, dis12{k+1} >=Ds) ];
 %  constraints = [constraints, [sum(b1) == 1], implies(b1(1), [a1==1, dis12{k+1} >=Ds]);
 %                                                 implies(b1(2), [a1==0 ] )];
  
-%  f(x)???+M(1?a)
+
 %  constraints = [constraints,  implies(a1{k}==1, dis12{k+1} >=Ds)];
 %                                             
-%                                             
-% implies(d1,[a==0,f>=margin]) + 
-% implies(d2,[a==1,-margin <= f <= margin]) + 
-% implies(d3,[a==0,f <= -margin]) + 
-% [d1+d2+d3 == 1]
-% % constraints = [constraints, dis12{k+1} >=Ds ];                                    
-
+   
     % It is EXTREMELY important to add as many
     % constraints as possible to the binary variables
   
@@ -123,8 +135,8 @@ end
 objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); % calculate obj
   
 
-parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},b1};
-solutions_out = {[a{:}], [z{:}], [v{:}], [dz{:}], [a1], [D1]};
+parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa};
+solutions_out = {[a{:}], [z{:}], [v{:}], [dz{:}],[a1],[b1],[dis12{:}]};
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
 %------condiciones iniciales----------
@@ -134,12 +146,10 @@ Vdes=[30; 20]; %velocidad deseada
 Zdes=[1; 2];
 %---distancia inicial de cada agente
 % disij= Zj-zi
-d12 = [10];
+d12 = [50];
 dis21 = [-40];
 past_a=[0 0]';
 
-
-% clf;
 
 % hold on
 vhist = vel;
@@ -149,9 +159,11 @@ dhist = d12;
  D1hist =[0 0 0]';
  A1hist =[0]';
  blogic=0;
+ b1hist=[];
+ g1hist=[];
  vphist=[]; zphist=[];
 %%
-for i = 1:20
+for i = 1:30
     
 %     dz=zel(2)-zel(1);
 %   parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},b1};
@@ -164,8 +176,8 @@ for i = 1:20
     V = solutions{3};vphist=[vphist; V];
     DZ = solutions{4};
     A1 = solutions{5};blogic=A1(:,1);
-%     B1 = solutions{6};
-    D11 = solutions{6};
+    B1 = solutions{6};b1hist=[b1hist B1];
+    g1 = solutions{7};g1hist=[g1hist; g1];
     
     if diagnostics == 1
         error('The problem is infeasible');
@@ -181,7 +193,7 @@ for i = 1:20
     zhist = [zhist zel];
     ahist = [ahist past_a];
     dhist = [dhist d12];
-    D1hist =[D1hist D11];
+%     D1hist =[D1hist D11];
     A1hist =[A1hist A1];
     d12 = d12+T*(vel(2)-vel(1));
 %     pause(0.05)   

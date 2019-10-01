@@ -62,7 +62,7 @@ hold on;
 %------------agente 1------------
     plot(x_1(k),y_1(k),'-r','linewidth',line_width);hold on % plot exhibited trajectory
     if k < size(vhist,2) % plot prediction
-        plot(xp_1(k,1:N),zphist(k,1:N),'r--*')
+        plot(xp_1(k,1:N),zphist(k,1:N),'b--*')
     end
     plot(x_1(k)+xp,y_1(k)+yp,'--r')% plot robot circle
 %------------agente 2------------
