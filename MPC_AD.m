@@ -5,14 +5,17 @@ clear all
 close all
 clc
 %----------pc casa
+%  addpath('C:\gurobi811\win64\matlab') %Gurobi
+addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\matlab\x64_win64'))%cplex
+addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\examples\src\matlab'))%cplex
+addpath(genpath('C:\Users\Personal\Desktop\potential games\YALMIP-master'))
 
 
-
-%---------laptop tavo
-%linux
-addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
-addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
-yalmip('clear')
+% %---------laptop tavo
+% %linux
+% addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
+% addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
+% yalmip('clear')
 
 
 % %windows
@@ -100,17 +103,15 @@ constraints = [constraints, [D1(1)+D1(2)+D1(3)==1],
               implies( D1(3), [ a1==0, 0.2 <= z_2-z{k} ]) ];
 %.........................Beta...............................
 
-constraints = [constraints,  [sum(B1)==1],
-              implies( B1(1), [  dis12{k+1} <= 0 , b1==0]);
-              implies( B1(2), [  dis12{k+1} >= 0 , b1==1])];
+% constraints = [constraints,  implies( b1, dis12{2} <= 0 )];
 
 
-% constraints = [constraints, implies(dis12{k} >= 0,b1)];
+% constraints = [constraints, implies(dis12{2} >= 0,b1)];
 
 
-% constraints = [constraints, [B1(1)+B1(2)==1], 
-%               implies([  dis12{k} >=0 ], B1(1));
-%               implies([  dis12{k} <=0 ], B1(2)) ];
+constraints = [constraints, [sum(B1)==1], 
+              implies(B1(1),[ b1==1, dis12{1} >=0 ]);
+              implies(B1(2),[ b1==0, dis12{1} <=0 ]) ];
 % %  
 % %.........................Gamma...............................
 % constraints = [constraints, [G1(1)+G1(2)+G1(3)==1], 
@@ -136,7 +137,7 @@ objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); %
   
 
 parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa};
-solutions_out = {[a{:}], [z{:}], [v{:}],[a1],[dis12{:}],[B1]};
+solutions_out = {[a{:}], [z{:}], [v{:}],[a1],[dis12{:}],[b1]};
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
 %------condiciones iniciales----------
@@ -162,7 +163,7 @@ dhist = d12;
  b1hist=[];
  g1hist=[];
  vphist=[]; zphist=[];
-%%
+
 for i = 1:30
     
 %     dz=zel(2)-zel(1);
