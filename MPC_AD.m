@@ -35,13 +35,13 @@ N = 8;%horizon
 T = 0.5; %[s]
 Ds=3;%Safety distance
 V_max=40;
-A_max=20;
+A_max=10;
 L=6;%number of lanes
 Mmax=L-1;
 mmin=-L+1;
 e=1;
 Vd = 40;
-Zd = 2;
+Zd = 1;
 %------------estados deseados-----------
 % Zd = sdpvar(repmat(nv,1,1),repmat(1,1,1));%carril deseado
 % Vd = sdpvar(repmat(nv,1,1),repmat(1,1,1));%velocidad deseada
@@ -56,9 +56,8 @@ z = sdpvar(repmat(nv,1,N+1),repmat(1,1,N+1));%carril
 z_2 = sdpvar(1);%carril
 dz = sdpvar(repmat(1,1,N),repmat(1,1,N));%diferencia de carril
 
-
 a1 = binvar(1,1);
-% g1 = binvar(1,1);
+g1 = binvar(1,1);
 a2 = binvar(1,1);
 Aa = binvar(1,1);
 b1 = binvar(1,1);
@@ -103,21 +102,17 @@ constraints = [constraints, [D1(1)+D1(2)+D1(3)==1],
               implies( D1(3), [ a1==0, 0.2 <= z_2-z{k} ]) ];
 %.........................Beta...............................
 
-% constraints = [constraints,  implies( b1, dis12{2} <= 0 )];
-
-
-% constraints = [constraints, implies(dis12{2} >= 0,b1)];
-
-
 constraints = [constraints, [sum(B1)==1], 
               implies(B1(1),[ b1==1, dis12{1} >=0 ]);
               implies(B1(2),[ b1==0, dis12{1} <=0 ]) ];
-% %  
+ 
 % %.........................Gamma...............................
-% constraints = [constraints, [G1(1)+G1(2)+G1(3)==1], 
-%               implies( G1(1), [ g1==0, z_2-z{k+1} <=-0.1 ]);
-%               implies( G1(2), [ g1==1, -0.1<=z_2-z{k+1} <=0.2 ]);
-%               implies( G1(3), [ g1==0, 0.1 <= z_2-z{k+1} ]) ];          
+constraints = [constraints, [G1(1)+G1(2)+G1(3)==1], 
+              implies( G1(1), [ g1==0, z_2-z{k+1} <=-0.1 ]);
+              implies( G1(2), [ g1==1, -0.1<=z_2-z{k+1} <=0.2 ]);
+              implies( G1(3), [ g1==0, 0.1 <= z_2-z{k+1} ]) ];          
+          
+          
           
 constraints = [constraints,  implies( Aa, dis12{k+1} >=Ds) ];
 
@@ -137,7 +132,7 @@ objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); %
   
 
 parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa};
-solutions_out = {[a{:}], [z{:}], [v{:}],[a1],[dis12{:}],[b1]};
+solutions_out = {[a{:}], [z{:}], [v{:}],[a1],[dis12{:}],[b1],[G1]};
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
 %------condiciones iniciales----------
@@ -163,6 +158,7 @@ dhist = d12;
  b1hist=[];
  g1hist=[];
  vphist=[]; zphist=[];
+  ghist=[];
 
 for i = 1:30
     
@@ -179,7 +175,7 @@ for i = 1:30
     A1 = solutions{4};blogic=A1(:,1);
     g1 = solutions{5};    g1hist=[g1hist; g1];
     B1 = solutions{6};    b1hist=[b1hist B1];
-    
+    Gg1 = solutions{7};    ghist=[ghist Gg1];
     if diagnostics == 1
         error('The problem is infeasible');
     end
@@ -204,11 +200,6 @@ end
 
 
 
-% Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
-
-
-
-
-
+Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
 
 
