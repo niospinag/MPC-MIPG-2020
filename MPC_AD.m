@@ -1,7 +1,7 @@
 % %UNIVERSIDAD NACIONAL DE COLOMBIA
 % Multi Vehicle automated drivring
 %Autor: Nestor Ospina
-clear all
+clear 
 close all
 clc
 %----------pc casa
@@ -48,13 +48,13 @@ Zd = 1;
 
 
 % -------------vehiculo i---------------
-v = sdpvar(repmat(nv,1,N+1),repmat(1,1,N+1));%velocidad
+v = sdpvar(ones(1,N+1)*nv,ones(1,N+1));%velocidad
 v_2 = sdpvar(1);%velocidad
-a = sdpvar(repmat(nv,1,N),repmat(1,1,N));%aceleracion
-dis12 = sdpvar(repmat(1,1,N+1),repmat(1,1,N+1));%distancia
-z = sdpvar(repmat(nv,1,N+1),repmat(1,1,N+1));%carril
+a = sdpvar(ones(1,N+1)*nv,ones(1,N));%aceleracion
+dis12 = sdpvar(ones(1,N+1),ones(1,N+1));%distancia
+z = sdpvar(ones(1,N+1)*nv,ones(1,N+1));%carril
 z_2 = sdpvar(1);%carril
-dz = sdpvar(repmat(1,1,N),repmat(1,1,N));%diferencia de carril
+dz = sdpvar(ones(1,N),ones(1,N));%diferencia de carril
 
 a1 = binvar(1,1);
 g1 = binvar(1,1);
@@ -72,7 +72,7 @@ B1 = binvar(2,1);
 % D3 = binvar(repmat(1,1,N),repmat(1,1,N));
 p_a = sdpvar(1);
 p_z = sdpvar(1);
-constraints = [];
+% constraints = [];
 constraints = [-0.1 <= diff([p_a a{:}]) <= 0.1];
 constraints = [-1 <= diff([p_z z{:}]) <= 1];
 objective   = 0;
