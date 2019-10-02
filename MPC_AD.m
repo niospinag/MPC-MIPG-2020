@@ -60,6 +60,7 @@ a1 = binvar(1,1);
 g1 = binvar(1,1);
 a2 = binvar(1,1);
 Aa = binvar(1,1);
+Bb = binvar(1,1);
 b1 = binvar(1,1);
 % a2 = binvar(repmat(1,1,N),repmat(1,1,N));
 % a3 = binvar(repmat(1,1,N),repmat(1,1,N));
@@ -101,11 +102,11 @@ constraints = [constraints, [D1(1)+D1(2)+D1(3)==1],
               implies( D1(2), [ a1==1, -0.2<=z_2-z{k} <=0.2 ]);
               implies( D1(3), [ a1==0, 0.2 <= z_2-z{k} ]) ];
 %.........................Beta...............................
-
-constraints = [constraints, [sum(B1)==1], 
-              implies(B1(1),[ b1==1, dis12{1} >=0 ]);
-              implies(B1(2),[ b1==0, dis12{1} <=0 ]) ];
- 
+% 
+% constraints = [constraints, [sum(B1)==1], 
+%               implies(B1(1),[ b1==1, dis12{1} >=0 ]);
+%               implies(B1(2),[ b1==0, dis12{1} <=0 ]) ];
+%  
 % %.........................Gamma...............................
 constraints = [constraints, [G1(1)+G1(2)+G1(3)==1], 
               implies( G1(1), [ g1==0, z_2-z{k+1} <=-0.1 ]);
@@ -115,34 +116,33 @@ constraints = [constraints, [G1(1)+G1(2)+G1(3)==1],
           
           
 constraints = [constraints,  implies( Aa, dis12{k+1} >=Ds) ];
+% constraints = [constraints,  Aa*(Bb*(Ds - dis12{k+1}) + (1-Bb)*(Ds + dis12{k+1}))<=0];
+% constraints = [constraints,  Aa*((1-Bb)*(Ds + dis12{k+1}))<=0];
+% constraints = [constraints,  Aa*(Bb*(Ds - dis12{k+1}))<=0];
 
-
-%  constraints = [constraints, [sum(b1) == 1], implies(b1(1), [a1==1, dis12{k+1} >=Ds]);
-%                                                 implies(b1(2), [a1==0 ] )];
- 
-
-%  constraints = [constraints,  implies(a1{k}==1, dis12{k+1} >=Ds)];
-%                                             
-   
     % It is EXTREMELY important to add as many
     % constraints as possible to the binary variables
   
 end
+
+constraints = [constraints, [sum(B1)==1], 
+              implies(B1(1),[ b1==1, dis12{1} >=0 ]);
+              implies(B1(2),[ b1==0, dis12{1} <=0 ]) ];
 objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); % calculate obj
   
 
-parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa};
+parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa,Bb};
 solutions_out = {[a{:}], [z{:}], [v{:}],[a1],[dis12{:}],[b1],[G1]};
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
 %------condiciones iniciales----------
-vel=[3; 15];% velociodad inicial
+vel=[20; 10];% velociodad inicial
 zel=[6; 1]; %carril inicial
 Vdes=[30; 20]; %velocidad deseada
 Zdes=[1; 2];
 %---distancia inicial de cada agente
 % disij= Zj-zi
-d12 = [50];
+d12 = [5];
 dis21 = [-40];
 past_a=[0 0]';
 
@@ -154,7 +154,8 @@ ahist = past_a;
 dhist = d12;
  D1hist =[0 0 0]';
  A1hist =[0]';
- blogic=0;
+ alogic=0;
+ blogic=1;
  b1hist=[];
  g1hist=[];
  vphist=[]; zphist=[];
@@ -166,15 +167,15 @@ for i = 1:30
 %   parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},b1};
 %   inputs = {past_a(1),vel(1),zel(1),d12,vel(2),zel(2)};
 % solutions_out = {[a{:}], [z{:}], [v{:}], [dz{:}], [a1{:}], [b1{:}], [D1{:}]};
-    inputs = {vel(1),past_a(1),zel(1),vel(2),zel(2),d12,blogic};
+    inputs = {vel(1),past_a(1),zel(1),vel(2),zel(2),d12,alogic,blogic};
     [solutions,diagnostics] = controller1{inputs};    
     A = solutions{1};past_a(1) = A(:,1);
     Z = solutions{2}; zel(1)=Z(:,1);zphist=[zphist; Z];
     V = solutions{3};vphist=[vphist; V];
 %     DZ = solutions{4};
-    A1 = solutions{4};blogic=A1(:,1);
+    A1 = solutions{4};alogic=A1(:,1);
     g1 = solutions{5};    g1hist=[g1hist; g1];
-    B1 = solutions{6};    b1hist=[b1hist B1];
+    B1 = solutions{6};    b1hist=[b1hist B1];%blogic=B1(:,1);
     Gg1 = solutions{7};    ghist=[ghist Gg1];
     if diagnostics == 1
         error('The problem is infeasible');
