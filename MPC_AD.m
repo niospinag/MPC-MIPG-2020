@@ -6,16 +6,16 @@ close all
 clc
 %----------pc casa
 %  addpath('C:\gurobi811\win64\matlab') %Gurobi
-addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\matlab\x64_win64'))%cplex
-addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\examples\src\matlab'))%cplex
-addpath(genpath('C:\Users\Personal\Desktop\potential games\YALMIP-master'))
+% addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\matlab\x64_win64'))%cplex
+% addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\examples\src\matlab'))%cplex
+% addpath(genpath('C:\Users\Personal\Desktop\potential games\YALMIP-master'))
 
 
 % %---------laptop tavo
-% %linux
-% addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
-% addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
-% yalmip('clear')
+%linux
+addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
+addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
+yalmip('clear')
 
 
 % %windows
@@ -48,13 +48,13 @@ Zd = 1;
 
 
 % -------------vehiculo i---------------
-v = sdpvar(ones(1,N+1)*nv,ones(1,N+1));%velocidad
-v_2 = sdpvar(1);%velocidad
-a = sdpvar(ones(1,N+1)*nv,ones(1,N));%aceleracion
-dis12 = sdpvar(ones(1,N+1),ones(1,N+1));%distancia
-z = sdpvar(ones(1,N+1)*nv,ones(1,N+1));%carril
-z_2 = sdpvar(1);%carril
-dz = sdpvar(ones(1,N),ones(1,N));%diferencia de carril
+v = sdpvar(ones(1,N+1)*nv,ones(1,N+1)); %velocidad
+v_2 = sdpvar(1); %velocidad
+a = sdpvar(ones(1,N+1)*nv,ones(1,N+1)); %aceleracion
+dis12 = sdpvar(ones(1,N+1),ones(1,N+1)); %distancia
+z = sdpvar(ones(1,N+1)*nv,ones(1,N+1)); %carril
+z_2 = sdpvar(1); %carril
+dz = sdpvar(ones(1,N),ones(1,N)); %diferencia de carril
 
 a1 = binvar(1,1);
 g1 = binvar(1,1);
