@@ -1,0 +1,6 @@
+PWD /Users/duvantellez/Documents/0_Unal/0_In preparation/0_Data-Driven_RHC/0_Paper_tex
+INPUT /usr/local/texlive/2017/texmf.cnf
+INPUT /usr/local/texlive/2017/texmf-dist/web2c/texmf.cnf
+INPUT /usr/local/texlive/2017/texmf-var/web2c/pdftex/pdflatex.fmt
+INPUT 1_abstract.tex
+OUTPUT Output/1_abstract.log
