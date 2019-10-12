@@ -1,4 +1,3 @@
-%%
 %% IEEEtran.cls 2002/11/18 version V1.6b
 %% 
 %% NOTE: This text file uses MS Windows line feed conventions. When (human)
