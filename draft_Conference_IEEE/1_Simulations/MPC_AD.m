@@ -109,14 +109,15 @@ constraints = [constraints, [D1(1)+D1(2)+D1(3)==1],
 %               implies(B1(2),[ b1==0, dis12{1} <=0 ]) ];
 %  
 % %.........................Gamma...............................
-constraints = [constraints, [G1(1)+G1(2)+G1(3)==1], 
-              implies( G1(1), [ g1==0, z_2-z{k+1} <=-0.1 ]);
-              implies( G1(2), [ g1==1, -0.1<=z_2-z{k+1} <=0.2 ]);
-              implies( G1(3), [ g1==0, 0.1 <= z_2-z{k+1} ]) ];          
+% constraints = [constraints, [G1(1)+G1(2)+G1(3)==1], 
+%               implies( G1(1), [ g1==0, z_2-z{k+1} <=-0.1 ]);
+%               implies( G1(2), [ g1==1, -0.1<=z_2-z{k+1} <=0.2 ]);
+%               implies( G1(3), [ g1==0, 0.1 <= z_2-z{k+1} ]) ];          
           
-          
-          
+
 % constraints = [constraints,  implies( Aa, dis12{k+1} >=Ds) ];
+
+
 % constraints = [constraints,  Aa*(Bb*(Ds - dis12{k+1}) + (1-Bb)*(Ds + dis12{k+1}))<=0];
 % constraints = [constraints,  Aa*((1-Bb)*(Ds + dis12{k+1}))<=0];
 % constraints = [constraints,  Aa*(Bb*(Ds - dis12{k+1}))<=0];
@@ -125,25 +126,25 @@ constraints = [constraints, [G1(1)+G1(2)+G1(3)==1],
     % constraints as possible to the binary variables
   
 end
-
-constraints = [constraints, [sum(B1)==1], 
-              implies(B1(1),[ b1==1, dis12{1} >=0 ]);
-              implies(B1(2),[ b1==0, dis12{1} <=0 ]) ];
+% 
+% constraints = [constraints, [sum(B1)==1], 
+%               implies(B1(1),[ b1==1, dis12{1} >=0 ]);
+%               implies(B1(2),[ b1==0, dis12{1} <=0 ]) ];
 objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); % calculate obj
-  
+%   
 
 parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa,Bb};
 solutions_out = {[a{:}], [z{:}], [v{:}],[a1],[dis12{:}],[b1],[G1]};
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
 %------condiciones iniciales----------
-vel=[20; 10];% velociodad inicial
+vel=[0; 10];% velociodad inicial
 zel=[6; 1]; %carril inicial
 Vdes=[30; 20]; %velocidad deseada
 Zdes=[1; 2];
 %---distancia inicial de cada agente
 % disij= Zj-zi
-d12 = [5];
+d12 = [30];
 dis21 = [-40];
 past_a=[0 0]';
 
