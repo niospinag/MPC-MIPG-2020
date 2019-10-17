@@ -41,7 +41,7 @@ L=6;%number of lanes
 Mmax=L-1;
 mmin=-L+1;
 e=1;
-Vd = 30;
+Vd = 12;
 Zd = 1;
 %------------estados deseados-----------
 % Zd = sdpvar(repmat(nv,1,1),repmat(1,1,1));%carril deseado
@@ -117,13 +117,15 @@ constraints = [constraints, [G1(1)+G1(2)+G1(3)==1],
           
 constraints = [constraints, 1<=[z{k+1}<=L]];           
 
-constraints = [constraints,  implies( Aa, dis12{k+1} >=Ds) ];
+% constraints = [constraints,  implies( Aa, dis12{k+1} >=Ds) ];
 
 
-% constraints = [constraints,  Aa*(Bb*(Ds - dis12{k+1}) + (1-Bb)*(Ds + dis12{k+1}))<=0];
+% constraints = [constraints, implies( Aa==1,[Bb==0, dis12{k+1} <=-Ds] )];
+% constraints = [constraints, implies( Aa==1,[Bb==1, dis12{k+1} >= Ds ] )];
+
 % constraints = [constraints,  Aa*((1-Bb)*(Ds + dis12{k+1}))<=0];
-% constraints = [constraints,  Aa*(Bb*(Ds - dis12{k+1}))<=0];
-
+% constraints = [constraints,  Aa*(Bb*(Ds - dis12{k+1})+(1-Bb)*(Ds + dis12{k+1}))<=0];
+constraints = [constraints,  Aa*(1-Bb)*(Ds + dis12{k+1})<=0];
     % It is EXTREMELY important to add as many
     % constraints as possible to the binary variables
   
@@ -140,13 +142,13 @@ solutions_out = {[a{:}], [z{:}], [v{:}], [a1], [dis12{:}], [b1], [g1]};
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
 %------condiciones iniciales----------
-vel=[0; 10];% velociodad inicial
-zel=[6; 1]; %carril inicial
-Vdes=[30; 20]; %velocidad deseada
+vel=[10; 25];% velociodad inicial
+zel=[2; 1]; %carril inicial
+Vdes=[15; 20]; %velocidad deseada
 Zdes=[1; 2];
 %---distancia inicial de cada agente
 % disij= Zj-zi
-d12 = [15];
+d12 = [-25];
 dis21 = [-40];
 past_a=[0 0]';
 
@@ -179,7 +181,7 @@ for i = 1:30
 %     DZ = solutions{4};
     A1 = solutions{4};alogic=A1(:,1);
     g1 = solutions{5};    g1hist=[g1hist; g1];
-    B1 = solutions{6};    b1hist=[b1hist B1];%blogic=B1(:,1);
+    B1 = solutions{6};    b1hist=[b1hist B1];blogic=B1(:,1);
     Gg1 = solutions{7};    ghist=[ghist Gg1];
     if diagnostics == 1
         error('The problem is infeasible');
@@ -205,5 +207,5 @@ end
 
 
 
-% Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
+Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
 
