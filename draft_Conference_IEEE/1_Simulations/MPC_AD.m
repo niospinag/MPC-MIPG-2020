@@ -62,13 +62,16 @@ g1 = binvar(1,1);
 a2 = binvar(1,1);
 Aa = binvar(1,1);
 Bb = binvar(1,1);
+Gg = binvar(1,1);
 b1 = binvar(1,1);
+z1 = binvar(1,1);
 % a2 = binvar(repmat(1,1,N),repmat(1,1,N));
 % a3 = binvar(repmat(1,1,N),repmat(1,1,N));
 
 D1 = binvar(3,1);
 G1 = binvar(3,1);
 B1 = binvar(2,1);
+Z1 = binvar(5,1);
 % D2 = binvar(repmat(1,1,N),repmat(1,1,N));
 % D3 = binvar(repmat(1,1,N),repmat(1,1,N));
 p_a = sdpvar(1);
@@ -115,7 +118,16 @@ constraints = [constraints, [G1(1)+G1(2)+G1(3)==1],
               implies( G1(2), [ g1==1, -0.1<=z_2-z{k+1} <=0.2 ]);
               implies( G1(3), [ g1==0, 0.1 <= z_2-z{k+1} ]) ];   
           
-constraints = [constraints, 1<=[z{k+1}<=L]];           
+constraints = [constraints, [1<=z{k+1}<=L]];           
+
+% %.........................Lateral distance...............................
+constraints = [constraints, [sum(Z1)==1], 
+              implies( Z1(1), [ z1==0,       z_2-p_z <= -1.1 ]);
+              implies( Z1(2), [ z1==1, -1.1<=z_2-p_z <= -0.9 ]);
+              implies( Z1(3), [ z1==0, -0.9<=z_2-p_z <= 0.9 ]);
+              implies( Z1(4), [ z1==1,  0.9<=z_2-p_z <= 1.1 ]);
+              implies( Z1(5), [ z1==0,            1.1 <= z_2-p_z ]) ];   
+constraints = [constraints, [1<=p_z<=L]];
 
 % constraints = [constraints,  implies( Aa, dis12{k+1} >=Ds) ];
 
@@ -124,8 +136,11 @@ constraints = [constraints, 1<=[z{k+1}<=L]];
 % constraints = [constraints, implies( Aa==1,[Bb==1, dis12{k+1} >= Ds ] )];
 
 % constraints = [constraints,  Aa*((1-Bb)*(Ds + dis12{k+1}))<=0];
-% constraints = [constraints,  Aa*(Bb*(Ds - dis12{k+1})+(1-Bb)*(Ds + dis12{k+1}))<=0];
-constraints = [constraints,  Aa*(1-Bb)*(Ds + dis12{k+1})<=0];
+constraints = [constraints,  Aa*(Bb*(Ds - dis12{k+1})+(1-Bb)*(Ds + dis12{k+1}))<=0];
+
+constraints = [constraints,  Aa*Gg*(-Bb*(T*(v_2-v{k})+dis12{k})+(1-Bb)*(T*(v_2-v{k})+dis12{k}))<=0];
+
+% constraints = [constraints,  Aa*(1-Bb)*(Ds + dis12{k+1})<=0];
     % It is EXTREMELY important to add as many
     % constraints as possible to the binary variables
   
@@ -135,20 +150,20 @@ end
 %               implies(B1(1),[ b1==1, dis12{1} >=0 ]);
 %               implies(B1(2),[ b1==0, dis12{1} <=0 ]) ];
 objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); % calculate obj
-%   
+%% solver definition   
 
-parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa,Bb};
-solutions_out = {[a{:}], [z{:}], [v{:}], [a1], [dis12{:}], [b1], [g1]};
+parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa,Bb,Gg};
+solutions_out = {[a{:}], [z{:}], [v{:}], [a1], [dis12{:}], [b1], [g1], [z1]};
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
 %------condiciones iniciales----------
 vel=[10; 25];% velociodad inicial
-zel=[2; 1]; %carril inicial
+zel=[4; 2]; %carril inicial
 Vdes=[15; 20]; %velocidad deseada
 Zdes=[1; 2];
 %---distancia inicial de cada agente
 % disij= Zj-zi
-d12 = [-25];
+d12 = [-45];
 dis21 = [-40];
 past_a=[0 0]';
 
@@ -162,7 +177,9 @@ dhist = d12;
  A1hist =[0]';
  alogic=0;
  blogic=1;
+ G1logic=1;
  b1hist=[];
+ z1hist=[];
  g1hist=[];
  vphist=[]; zphist=[];
   ghist=[];
@@ -173,7 +190,7 @@ for i = 1:30
 %   parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},b1};
 %   inputs = {past_a(1),vel(1),zel(1),d12,vel(2),zel(2)};
 % solutions_out = {[a{:}], [z{:}], [v{:}], [dz{:}], [a1{:}], [b1{:}], [D1{:}]};
-    inputs = {vel(1),past_a(1),zel(1),vel(2),zel(2),d12,alogic,blogic};
+    inputs = {vel(1),past_a(1),zel(1),vel(2),zel(2),d12,alogic,blogic,G1logic};
     [solutions,diagnostics] = controller1{inputs};    
     A = solutions{1};past_a(1) = A(:,1);
     Z = solutions{2}; zel(1)=Z(:,1);zphist=[zphist; Z];
@@ -182,7 +199,9 @@ for i = 1:30
     A1 = solutions{4};alogic=A1(:,1);
     g1 = solutions{5};    g1hist=[g1hist; g1];
     B1 = solutions{6};    b1hist=[b1hist B1];blogic=B1(:,1);
-    Gg1 = solutions{7};    ghist=[ghist Gg1];
+    Gg1 = solutions{7};    ghist=[ghist Gg1];G1logic=Gg1(:,1);
+    Z1 = solutions{8};    z1hist=[z1hist Z1];
+    
     if diagnostics == 1
         error('The problem is infeasible');
     end
@@ -200,12 +219,12 @@ for i = 1:30
 %     D1hist =[D1hist D11];
     A1hist =[A1hist A1];
     d12 = d12+T*(vel(2)-vel(1));
-%     pause(0.05)   
+    pause(0.05)   
     % The measured disturbance actually isn't constant, it changes slowly
 %     disturbance = 0.99*disturbance + 0.01*randn(1);
 end
 
 
 
-Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
+% Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
 
