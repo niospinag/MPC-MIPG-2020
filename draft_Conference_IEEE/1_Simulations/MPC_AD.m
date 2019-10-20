@@ -35,6 +35,7 @@ R = eye(nv);
 N = 8;%horizon
 T = 0.5; %[s]
 Ds=3;%Safety distance
+Dl=5.5; %lateral distance
 V_max=40;
 A_max=7;
 L=6;%number of lanes
@@ -63,8 +64,11 @@ a2 = binvar(1,1);
 Aa = binvar(1,1);
 Bb = binvar(1,1);
 Gg = binvar(1,1);
+Ss = binvar(1,1);
+Nn = binvar(1,1);
 b1 = binvar(1,1);
 z1 = binvar(1,1);
+n1 = binvar(1,1);
 % a2 = binvar(repmat(1,1,N),repmat(1,1,N));
 % a3 = binvar(repmat(1,1,N),repmat(1,1,N));
 
@@ -72,6 +76,7 @@ D1 = binvar(3,1);
 G1 = binvar(3,1);
 B1 = binvar(2,1);
 Z1 = binvar(5,1);
+N1 = binvar(3,1);
 % D2 = binvar(repmat(1,1,N),repmat(1,1,N));
 % D3 = binvar(repmat(1,1,N),repmat(1,1,N));
 p_a = sdpvar(1);
@@ -129,41 +134,42 @@ constraints = [constraints, [sum(Z1)==1],
               implies( Z1(5), [ z1==0,            1.1 <= z_2-p_z ]) ];   
 constraints = [constraints, [1<=p_z<=L]];
 
-% constraints = [constraints,  implies( Aa, dis12{k+1} >=Ds) ];
+% %.........................lateral safety distance...............................
+constraints = [constraints, [sum(N1)==1], 
+              implies( N1(1), [ n1==0,       dis12{1} <= -Dl]);
+              implies( N1(2), [ n1==1, -Dl<= dis12{1} <= Dl ]);
+              implies( N1(3), [ n1==0,  Dl<= dis12{1}]) ];   
 
 
-% constraints = [constraints, implies( Aa==1,[Bb==0, dis12{k+1} <=-Ds] )];
-% constraints = [constraints, implies( Aa==1,[Bb==1, dis12{k+1} >= Ds ] )];
 
-% constraints = [constraints,  Aa*((1-Bb)*(Ds + dis12{k+1}))<=0];
+
 constraints = [constraints,  Aa*(Bb*(Ds - dis12{k+1})+(1-Bb)*(Ds + dis12{k+1}))<=0];
 
 constraints = [constraints,  Aa*Gg*(-Bb*(T*(v_2-v{k})+dis12{k})+(1-Bb)*(T*(v_2-v{k})+dis12{k}))<=0];
 
-% constraints = [constraints,  Aa*(1-Bb)*(Ds + dis12{k+1})<=0];
+constraints = [constraints, Ss*Nn*(z{k}-p_z)>=0];
+
+
     % It is EXTREMELY important to add as many
     % constraints as possible to the binary variables
   
 end
-% 
-% constraints = [constraints, [sum(B1)==1], 
-%               implies(B1(1),[ b1==1, dis12{1} >=0 ]);
-%               implies(B1(2),[ b1==0, dis12{1} <=0 ]) ];
+
 objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); % calculate obj
 %% solver definition   
 
-parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa,Bb,Gg};
-solutions_out = {[a{:}], [z{:}], [v{:}], [a1], [dis12{:}], [b1], [g1], [z1]};
+parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa,Bb,Gg,Ss,Nn};
+solutions_out = {[a{:}], [z{:}], [v{:}], [a1], [dis12{:}], [b1], [g1], [z1], [n1]};
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
 %------condiciones iniciales----------
-vel=[10; 25];% velociodad inicial
+vel=[20; 15];% velociodad inicial
 zel=[4; 2]; %carril inicial
 Vdes=[15; 20]; %velocidad deseada
 Zdes=[1; 2];
 %---distancia inicial de cada agente
 % disij= Zj-zi
-d12 = [-45];
+d12 = [0];
 dis21 = [-40];
 past_a=[0 0]';
 
@@ -178,19 +184,22 @@ dhist = d12;
  alogic=0;
  blogic=1;
  G1logic=1;
- b1hist=[];
- z1hist=[];
+ S1logic=1;
+ N1logic=1;
+
+ n1hist=[];
  g1hist=[];
  vphist=[]; zphist=[];
-  ghist=[];
-
+ ghist=[];
+ b1hist=[];
+ z1hist=[];
 for i = 1:30
     
 %     dz=zel(2)-zel(1);
 %   parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},b1};
 %   inputs = {past_a(1),vel(1),zel(1),d12,vel(2),zel(2)};
 % solutions_out = {[a{:}], [z{:}], [v{:}], [dz{:}], [a1{:}], [b1{:}], [D1{:}]};
-    inputs = {vel(1),past_a(1),zel(1),vel(2),zel(2),d12,alogic,blogic,G1logic};
+    inputs = {vel(1),past_a(1),zel(1),vel(2),zel(2),d12,alogic,blogic,G1logic,S1logic,N1logic};
     [solutions,diagnostics] = controller1{inputs};    
     A = solutions{1};past_a(1) = A(:,1);
     Z = solutions{2}; zel(1)=Z(:,1);zphist=[zphist; Z];
@@ -200,7 +209,8 @@ for i = 1:30
     g1 = solutions{5};    g1hist=[g1hist; g1];
     B1 = solutions{6};    b1hist=[b1hist B1];blogic=B1(:,1);
     Gg1 = solutions{7};    ghist=[ghist Gg1];G1logic=Gg1(:,1);
-    Z1 = solutions{8};    z1hist=[z1hist Z1];
+    Z1 = solutions{8};    z1hist=[z1hist Z1];S1logic=Z1(:,1);
+    N1 = solutions{9};    n1hist=[n1hist N1];N1logic=N1(:,1);
     
     if diagnostics == 1
         error('The problem is infeasible');
@@ -226,5 +236,5 @@ end
 
 
 
-% Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
+Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
 
