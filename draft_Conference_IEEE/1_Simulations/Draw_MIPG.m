@@ -2,7 +2,7 @@ function Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
 
 set(0,'DefaultAxesFontName', 'Times New Roman')
 set(0,'DefaultAxesFontSize', 12)
-
+% zphist=[ones(1,size(zphist,2))*zhist(1,1);zphist];
 line_width = 1.5;
 fontsize_labels = 14;
 % N
@@ -15,7 +15,7 @@ fontsize_labels = 14;
 % %-----agente 2----
 % x_r_2 = [];
 % y_r_2 = [];
-an = 5; alt=0.5; % parametros carroceria
+an = 10; alt=0.5; % parametros carroceria
 
 rob_diam=1.5;
 r = rob_diam/2;  % robot radius
@@ -33,15 +33,34 @@ figure(500)%create a window named "500"
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Color', 'w');
 set(gcf,'Units','normalized','OuterPosition',[0 0 1 0.5]);%tamaño del grafico
-
-xp_1=[T*vphist(1,:)];
-xp_2=dhist(1:(size(vphist,2)));
+% 
+% xp_1=[T*vphist(1,:)];
+% xp_2=dhist(1:(size(vphist,2)));
 zph_2=ones(81,size(vphist,2))*zhist(2);
-for k = 1:size(vphist,1)
-xp_1(k+1,:)=xp_1(k,:)+T*vphist(k,:);
-xp_2(k+1,:)=xp_2(k,:)+T*15;
-end
+% for k = 1:size(vphist,1)
+% xp_1(k+1,:)=xp_1(k,:)+T*vphist(k,:);
+% xp_2(k+1,:)=xp_2(k,:)+T*15;
+% end
 % filename = '2c_1obs.gif';%<---------------------------------------------------------------------------------------------------------------
+xp_1=zeros(size(vphist));
+xp_2=zeros(size(vphist));
+xp_2(1,1)=[dhist(1)];
+    
+for j = 1:size(vphist,1)
+    xp_1(j+1,1)=xp_1(j,1)+T*vhist(1,j);   
+    for i = 1:(size(vphist,2)-1)
+        xp_1(j,i+1)=xp_1(j,i)+T*vphist(j,i);
+    end
+
+end
+
+for j = 1:size(vphist,1)
+    xp_2(j+1,1)=xp_2(j,1)+T*vhist(2,j);   
+    for i = 1:(size(vphist,2)-1)
+        xp_2(j,i+1)=xp_2(j,i)+T*vhist(2,i);
+    end
+end
+
 x_1=[0];
 x_2=[dhist(1)];
 

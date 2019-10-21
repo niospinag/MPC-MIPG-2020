@@ -83,7 +83,7 @@ p_a = sdpvar(1);
 p_z = sdpvar(1);
 % constraints = [];
 constraints = [-0.1 <= diff([p_a a{:}]) <= 0.1];
-constraints = [-1 <= diff([p_z z{:}]) <= 1];
+constraints = [constraints, -1 <= diff([p_z z{:}]) <= 1];
 objective   = 0;
 
 %-----creacion de funcion objetivo y restricciones--------------------
@@ -150,16 +150,11 @@ constraints = [constraints,  Aa*Gg*(-Bb*(T*(v_2-v{k})+dis12{k})+(1-Bb)*(T*(v_2-v
 
 
 constraints = [constraints, Ss*(Nn)*(z{k}-p_z)==0];
-% constraints = implies (Nn , [-0.1 <= diff([p_z z{k+1}]) <= 0.1]);
-
-% constraints = [constraints, Ss*Nn*(z{k+1}-p_z)>=0];
-
 
     % It is EXTREMELY important to add as many
     % constraints as possible to the binary variables
   
 end
-
 objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); % calculate obj
 %% solver definition   
 
@@ -204,15 +199,14 @@ for i = 1:30
     inputs = {vel(1),past_a(1),zel(1),vel(2),zel(2),d12,alogic,blogic,G1logic,S1logic,N1logic};
     [solutions,diagnostics] = controller1{inputs};    
     A = solutions{1};past_a(1) = A(:,1);
-    Z = solutions{2}; zel(1)=Z(:,1);zphist=[zphist; Z];
-    V = solutions{3};vphist=[vphist; V];
-%     DZ = solutions{4};
-    A1 = solutions{4};alogic=A1(:,1);
-    g1 = solutions{5};    g1hist=[g1hist; g1];
-    B1 = solutions{6};    b1hist=[b1hist B1];blogic=B1(:,1);
-    Gg1 = solutions{7};    ghist=[ghist Gg1];G1logic=Gg1(:,1);
-    Z1 = solutions{8};    z1hist=[z1hist Z1];S1logic=Z1(:,1);
-    N1 = solutions{9};    n1hist=[n1hist N1];N1logic=N1(:,1);
+    Z = solutions{2};   zel(1)=Z(:,1);          zphist=[zphist; Z];
+    V = solutions{3};   vphist=[vphist; V];
+    A1 = solutions{4};  alogic=A1(:,1);
+    g1 = solutions{5};  g1hist=[g1hist; g1];
+    B1 = solutions{6};  b1hist=[b1hist B1];     blogic=B1(:,1);
+    Gg1 = solutions{7}; ghist=[ghist Gg1];      G1logic=Gg1(:,1);
+    Z1 = solutions{8};  z1hist=[z1hist Z1];     S1logic=Z1(:,1);
+    N1 = solutions{9};  n1hist=[n1hist N1];     N1logic=N1(:,1);
     
     if diagnostics == 1
         error('The problem is infeasible');
@@ -228,7 +222,6 @@ for i = 1:30
     zhist = [zhist zel];
     ahist = [ahist past_a];
     dhist = [dhist d12];
-%     D1hist =[D1hist D11];
     A1hist =[A1hist A1];
     d12 = d12+T*(vel(2)-vel(1));
     pause(0.05)   
