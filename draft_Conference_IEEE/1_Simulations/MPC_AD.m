@@ -35,7 +35,7 @@ R = eye(nv);
 N = 8;%horizon
 T = 0.5; %[s]
 Ds=3;%Safety distance
-Dl=5.5; %lateral distance
+Dl=15; %lateral distance
 V_max=40;
 A_max=7;
 L=6;%number of lanes
@@ -105,6 +105,7 @@ for k = 1:N
     
 % ------------------------------------vehiculo 1-------------------------------    
 %------------------si dz=0  -------------------->>>    dij>= Ds----------------
+
 %.........................alpha...............................
 constraints = [constraints, [D1(1)+D1(2)+D1(3)==1], 
               implies( D1(1), [ a1==0, z_2-z{k} <=-0.2 ]);
@@ -127,11 +128,11 @@ constraints = [constraints, [1<=z{k+1}<=L]];
 
 % %.........................Lateral distance...............................
 constraints = [constraints, [sum(Z1)==1], 
-              implies( Z1(1), [ z1==0,       z_2-p_z <= -1.1 ]);
-              implies( Z1(2), [ z1==1, -1.1<=z_2-p_z <= -0.9 ]);
-              implies( Z1(3), [ z1==0, -0.9<=z_2-p_z <= 0.9 ]);
-              implies( Z1(4), [ z1==1,  0.9<=z_2-p_z <= 1.1 ]);
-              implies( Z1(5), [ z1==0,            1.1 <= z_2-p_z ]) ];   
+              implies( Z1(1), [ z1==0,       z_2-z{k} <= -1.1 ]);
+              implies( Z1(2), [ z1==1, -1.1<=z_2-z{k} <= -0.9 ]);
+              implies( Z1(3), [ z1==0, -0.9<=z_2-z{k} <= 0.9 ]);
+              implies( Z1(4), [ z1==1,  0.9<=z_2-z{k} <= 1.1 ]);
+              implies( Z1(5), [ z1==0,            1.1 <= z_2-z{k} ]) ];   
 constraints = [constraints, [1<=p_z<=L]];
 
 % %.........................lateral safety distance...............................
@@ -147,7 +148,11 @@ constraints = [constraints,  Aa*(Bb*(Ds - dis12{k+1})+(1-Bb)*(Ds + dis12{k+1}))<
 
 constraints = [constraints,  Aa*Gg*(-Bb*(T*(v_2-v{k})+dis12{k})+(1-Bb)*(T*(v_2-v{k})+dis12{k}))<=0];
 
-constraints = [constraints, Ss*Nn*(z{k}-p_z)>=0];
+
+constraints = [constraints, Ss*(Nn)*(z{k}-p_z)==0];
+% constraints = implies (Nn , [-0.1 <= diff([p_z z{k+1}]) <= 0.1]);
+
+% constraints = [constraints, Ss*Nn*(z{k+1}-p_z)>=0];
 
 
     % It is EXTREMELY important to add as many
@@ -164,7 +169,7 @@ solutions_out = {[a{:}], [z{:}], [v{:}], [a1], [dis12{:}], [b1], [g1], [z1], [n1
 controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
 %------condiciones iniciales----------
 vel=[20; 15];% velociodad inicial
-zel=[4; 2]; %carril inicial
+zel=[5; 2]; %carril inicial
 Vdes=[15; 20]; %velocidad deseada
 Zdes=[1; 2];
 %---distancia inicial de cada agente
@@ -194,11 +199,8 @@ dhist = d12;
  b1hist=[];
  z1hist=[];
 for i = 1:30
-    
-%     dz=zel(2)-zel(1);
-%   parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},b1};
-%   inputs = {past_a(1),vel(1),zel(1),d12,vel(2),zel(2)};
-% solutions_out = {[a{:}], [z{:}], [v{:}], [dz{:}], [a1{:}], [b1{:}], [D1{:}]};
+% solutions_out = {[a{:}], [z{:}], [v{:}], [a1], [dis12{:}], [b1], [g1], [z1], [n1]};
+% parameters_in = {v{1},p_a,p_z,v_2,z_2,dis12{1},Aa,Bb,Gg,Ss,Nn};
     inputs = {vel(1),past_a(1),zel(1),vel(2),zel(2),d12,alogic,blogic,G1logic,S1logic,N1logic};
     [solutions,diagnostics] = controller1{inputs};    
     A = solutions{1};past_a(1) = A(:,1);
