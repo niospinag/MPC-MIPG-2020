@@ -7,32 +7,18 @@ close all
 clc
 %----------pc casa
 %  addpath('C:\gurobi811\win64\matlab') %Gurobi
-<<<<<<< HEAD
+
 % addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\matlab\x64_win64'))%cplex
 % addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\examples\src\matlab'))%cplex
 % addpath(genpath('C:\Users\Personal\Desktop\potential games\YALMIP-master'))
 % addpath('C:\gurobi811\win64\matlab') %Gurobi
-=======
-addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\matlab\x64_win64'))%cplex
-addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\examples\src\matlab'))%cplex
-addpath(genpath('C:\Users\Personal\Desktop\potential games\YALMIP-master'))
-addpath('C:\gurobi811\win64\matlab') %Gurobi
->>>>>>> 4979ae9df880137f281acded72f36467b961d2b6
-
 
 % %---------laptop tavo
 %linux
-<<<<<<< HEAD
 addpath(genpath('/home/tavocardona/gurobi811/linux64'))%cplex
 % addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
-% addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
+ addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
 yalmip('clear')
-=======
-% addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
-% addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
-% yalmip('clear')
->>>>>>> 4979ae9df880137f281acded72f36467b961d2b6
-
 
 % %windows
 % addpath(genpath('C:\Users\Haptico\Desktop\NESTOR\paths\gurobi')) %Gurobi
@@ -256,7 +242,7 @@ for i = 1:30
                         vel(2),zel(2),d12(1),alogic1,blogic1,G1logic,S1logic,N1logic,...
                         vel(3),zel(3),d12(2),alogic2,blogic2,G2logic,S2logic,N2logic};
     [solutions1,diagnostics] = controller1{inputs};    
-    
+     
     A = solutions1{1};past_a(1) = A(:,1);
     Z = solutions1{2};   zel(1)=Z(:,1);          zp1hist=[zp1hist; Z];
     V = solutions1{3};   vp1hist=[vp1hist; V];
@@ -273,8 +259,24 @@ for i = 1:30
     Z2 = solutions1{14};  z2hist=[z2hist Z2];     S2logic=Z2(:,1);
     N2 = solutions1{15};  n2hist=[n2hist N2];     N2logic=N2(:,1);    
     
+%.........................solver vehiculo 2............................
+    inputs2 = {Vdes(3),Zdes(3),vel(3),past_a(3),zel(3),...
+                        vel(2),zel(2),[d12(1)-d12(2)],alogic1,blogic1,G1logic,S1logic,N1logic,...
+                        vel(1),zel(1),d12(2),alogic2,blogic2,G2logic,S2logic,N2logic};
+    [solutions2,diagnostics2] = controller1{inputs2};   
+    
+    
+    
+    
+    
+    
+    
+    
     if diagnostics == 1
         error('you are close, keep trying 1');
+    end
+    if diagnostics2 == 1
+        error('you are close, keep trying 2');
     end
     
 %     % vehiculo 2
@@ -306,6 +308,7 @@ for i = 1:30
     ahist = [ahist past_a];
     dhist = [dhist d12];
     A1hist =[A1hist A1];
+    A2hist =[A2hist A2];
     d12 = d12+T*(vel(2:(2+1))-ones(2,1)*vel(1));
     pause(0.05)   
 
@@ -313,5 +316,8 @@ end
 
 
 
-Draw_MIPG(vhist,vp1hist,zhist,zp1hist,dhist,T,N)
+Draw_MIPG(vhist,zhist,...
+                            vp1hist,zp1hist,...
+                            vp2hist,zp2hist,...
+                                                dhist,T,N)
 

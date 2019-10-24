@@ -1,5 +1,9 @@
-function Draw_MIPG(vhist,vphist,zhist,zphist,dhist,T,N)
-
+function Draw_MIPG(vhist,zhist,vp1hist,zp1hist,vp2hist,zp2hist,dhist,T,N)
+% Draw_MIPG(vhist,zhist,...
+%                             vp1hist,zp1hist,...
+%                             vp2hist,zp2hist,...
+%                                                 dhist,T,N)
+%        Draw_MIPG(vhist,vp1hist,zhist,zp1hist,dhist,T,N)
 set(0,'DefaultAxesFontName', 'Times New Roman')
 set(0,'DefaultAxesFontSize', 12)
 % zphist=[ones(1,size(zphist,2))*zhist(1,1);zphist];
@@ -36,44 +40,62 @@ set(gcf,'Units','normalized','OuterPosition',[0 0 1 0.5]);%tamaño del grafico
 % 
 % xp_1=[T*vphist(1,:)];
 % xp_2=dhist(1:(size(vphist,2)));
-zph_2=ones(81,size(vphist,2))*zhist(2);
+zph_2=ones(81,size(vp1hist,2))*zhist(2);
+zph_3=ones(81,size(vp1hist,2))*zhist(3);
 % for k = 1:size(vphist,1)
 % xp_1(k+1,:)=xp_1(k,:)+T*vphist(k,:);
 % xp_2(k+1,:)=xp_2(k,:)+T*15;
 % end
 % filename = '2c_1obs.gif';%<---------------------------------------------------------------------------------------------------------------
-xp_1=zeros(size(vphist));
-xp_2=zeros(size(vphist));
+xp_1=zeros(size(vp1hist));
+xp_2=zeros(size(vp1hist));
+xp_3=zeros(size(vp1hist));
 xp_2(1,1)=[dhist(1)];
-    
-for j = 1:size(vphist,1)
+
+% ---------vehiculo 1--------
+for j = 1:size(vp1hist,1)
     xp_1(j+1,1)=xp_1(j,1)+T*vhist(1,j);   
-    for i = 1:(size(vphist,2)-1)
-        xp_1(j,i+1)=xp_1(j,i)+T*vphist(j,i);
+    for i = 1:(size(vp1hist,2)-1)
+        xp_1(j,i+1)=xp_1(j,i)+T*vp1hist(j,i);
     end
 
 end
 
-for j = 1:size(vphist,1)
+% ---------vehiculo 2--------
+for j = 1:size(vp1hist,1)
     xp_2(j+1,1)=xp_2(j,1)+T*vhist(2,j);   
-    for i = 1:(size(vphist,2)-1)
+    for i = 1:(size(vp1hist,2)-1)
         xp_2(j,i+1)=xp_2(j,i)+T*vhist(2,i);
     end
 end
 
+% ---------vehiculo 3--------
+for j = 1:size(vp2hist,1)
+    xp_3(j+1,1)=xp_1(j,1)+T*vhist(3,j);   
+    for i = 1:(size(vp2hist,2)-1)
+        xp_3(j,i+1)=xp_3(j,i)+T*vp2hist(j,i);
+    end
+
+end
+
+
 x_1=[0];
 x_2=[dhist(1)];
+x_3=[dhist(2)];
 
 for k = 1:size(vhist,2)
    
     
     x_1(k+1)=x_1(k)+T*vhist(1,k);
     x_2(k+1)=x_2(k)+T*vhist(2,k);
+    x_3(k+1)=x_3(k)+T*vhist(3,k);
     y_1(k)=zhist(1,k);
     y_2(k)=zhist(2,k);
+    y_3(k)=zhist(3,k);
 %-------------Plot any car----------------    
 plot_car(an,alt,x_1(k),y_1(k),0,'b')%Plot the car
 plot_car(an,alt,x_2(k),y_2(k),0,'r')%Plot the car
+plot_car(an,alt,x_3(k),y_3(k),0,'g')%Plot the car
 hold on;
     
    
@@ -81,7 +103,7 @@ hold on;
 %------------agente 1------------
     plot(x_1(k),y_1(k),'-r','linewidth',line_width);hold on % plot exhibited trajectory
     if k < size(vhist,2) % plot prediction
-        plot(xp_1(k,1:N),zphist(k,1:N),'b--*')
+        plot(xp_1(k,1:N),zp1hist(k,1:N),'b--*')
     end
     plot(x_1(k)+xp,y_1(k)+yp,'--r')% plot robot circle
 %------------agente 2------------
@@ -90,7 +112,12 @@ hold on;
         plot(xp_2(k,1:N),zph_2(k,1:N),'r--*')
     end
     plot(x_2(k)+xp,y_2(k)+yp,'--r')% plot robot circle
- 
+%------------agente 3------------
+    plot(x_3(k),y_3(k),'-r','linewidth',line_width);hold on % plot exhibited trajectory
+    if k < size(vhist,2) % plot prediction
+        plot(xp_3(k,1:N),zph_3(k,1:N),'g--*')
+    end
+    plot(x_3(k)+xp,y_3(k)+yp,'--r')% plot robot circle 
     
     
    hold off
