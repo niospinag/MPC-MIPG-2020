@@ -10,12 +10,14 @@ clc
 % addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\matlab\x64_win64'))%cplex
 % addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\examples\src\matlab'))%cplex
 % addpath(genpath('C:\Users\Personal\Desktop\potential games\YALMIP-master'))
+% addpath('C:\gurobi811\win64\matlab') %Gurobi
 
 
 % %---------laptop tavo
 %linux
-addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
-addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
+addpath(genpath('/home/tavocardona/gurobi811/linux64'))%cplex
+% addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
+% addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
 yalmip('clear')
 
 
@@ -155,16 +157,16 @@ constraints = [constraints, [D2(1,1,i)+D2(2,1,i)+D2(3,1,i)==1],
               implies( D2(3,1,i), [ a2(i)==0, 0.2 <= z_3(i)-z{k} ]) ];
 %.........................Beta...............................
 constraints = [constraints, [sum(B2,1,i)==1], 
-              implies(B2(1,1,i),[ B2(i)==1, dis13{1}(i) >=0 ]);
-              implies(B2(2,1,i),[ B2(i)==0, dis13{1}(i) <=0 ]) ];
+              implies(B2(1,1,i),[ b2(i)==1, dis13{1}(i) >=0 ]);
+              implies(B2(2,1,i),[ b2(i)==0, dis13{1}(i) <=0 ]) ];
           
 constraints = [constraints, [dis13{1}(i)<=100000]]; 
 
 % %.........................Gamma...............................
 constraints = [constraints, [G2(1,1,i)+G2(2,1,i)+G2(3,1,i)==1], 
-              implies( G2(1,1,i), [ g1(i)==0, z_3(i)-z{k+1} <=-0.1 ]);
-              implies( G2(2,1,i), [ g1(i)==1, -0.1<=z_3(i)-z{k+1} <=0.2 ]);
-              implies( G2(3,1,i), [ g1(i)==0, 0.1 <= z_3(i)-z{k+1} ]) ];   
+              implies( G2(1,1,i), [ g2(i)==0, z_3(i)-z{k+1} <=-0.1 ]);
+              implies( G2(2,1,i), [ g2(i)==1, -0.1<=z_3(i)-z{k+1} <=0.2 ]);
+              implies( G2(3,1,i), [ g2(i)==0, 0.1 <= z_3(i)-z{k+1} ]) ];   
           
 constraints = [constraints, [1<=z{k+1}<=L]];           
 
@@ -200,7 +202,7 @@ parameters_in = {Vd,Zd,v{1},p_a,p_z,...
 solutions_out = {[a{:}], [z{:}], [v{:}], [a1], [dis12{:}], [b1], [g1], [z1], [n1]...
                                          [a2], [dis13{:}], [b2], [g2], [z2], [n2]};
 
-controller1 = optimizer(constraints, objective,sdpsettings('solver','cplex'),parameters_in,solutions_out);
+controller1 = optimizer(constraints, objective,sdpsettings('solver','gurobi'),parameters_in,solutions_out);
 %------condiciones iniciales----------
 vel=[20; 15; 10];% velociodad inicial
 zel=[5; 2; 1]; %carril inicial
@@ -220,7 +222,7 @@ ahist = past_a;
 dhist = d12;
  A1hist =[0]'; A2hist =[0]';
  alogic1=[0]; alogic2=[0];
- blogic1=[1]; blogic2=[1];
+ blogic1=[1]; blogic2=[0];
  G1logic=[1]; G2logic=[1];
  S1logic=[1]; S2logic=[1];
  N1logic=[1]; N2logic=[1];
@@ -228,8 +230,7 @@ dhist = d12;
  n1hist=[];  n2hist=[];
  g1hist=[];  g2hist=[];
  vp1hist=[]; vp2hist=[]; 
-zp1hist=[]; zp2hist=[];
- g1hist=[]; g2hist=[];
+ zp1hist=[]; zp2hist=[];
  b1hist=[]; b2hist=[];
  z1hist=[]; z2hist=[];
 for i = 1:30
@@ -240,24 +241,24 @@ for i = 1:30
 %                                          [a2], [dis13{:}], [b2], [g2], [z2], [n2]};
     inputs = {Vdes(1),Zdes(1),vel(1),past_a(1),zel(1),...
                         vel(2),zel(2),d12(1),alogic1,blogic1,G1logic,S1logic,N1logic,...
-                        vel(3),zel(3),d12(2),alogic2,blogic2,G2logic,S2logic,N2logic,};
+                        vel(3),zel(3),d12(2),alogic2,blogic2,G2logic,S2logic,N2logic};
     [solutions1,diagnostics] = controller1{inputs};    
     
     A = solutions1{1};past_a(1) = A(:,1);
     Z = solutions1{2};   zel(1)=Z(:,1);          zp1hist=[zp1hist; Z];
     V = solutions1{3};   vp1hist=[vp1hist; V];
     A1 = solutions1{4};  alogic1=A1(:,1);
-    g1 = solutions1{5};  g1hist=[g1hist; g1];
+    g1 = solutions1{5};  g1hist=[g1hist g1];
     B1 = solutions1{6};  b1hist=[b1hist B1];     blogic1=B1(:,1);
     Gg1 = solutions1{7}; g1hist=[g1hist Gg1];      G1logic=Gg1(:,1);
     Z1 = solutions1{8};  z1hist=[z1hist Z1];     S1logic=Z1(:,1);
     N1 = solutions1{9};  n1hist=[n1hist N1];     N1logic=N1(:,1);
-    A2 = solutions1{4};  alogic2=A2(:,1);
-    g2 = solutions1{5};  g2hist=[g2hist; g2];
-    B2 = solutions1{6};  b2hist=[b2hist B2];     blogic2=B2(:,1);
-    Gg2 = solutions1{7}; g2hist=[g2hist Gg2];      G2logic=Gg2(:,1);
-    Z2 = solutions1{8};  z2hist=[z2hist Z2];     S2logic=Z2(:,1);
-    N2 = solutions1{9};  n2hist=[n2hist N2];     N2logic=N2(:,1);    
+    A2 = solutions1{10};  alogic2=A2(:,1);
+    g2 = solutions1{11};  g2hist=[g2hist g2];
+    B2 = solutions1{12};  b2hist=[b2hist B2];     blogic2=B2(:,1);
+    Gg2 = solutions1{13}; g2hist=[g2hist Gg2];      G2logic=Gg2(:,1);
+    Z2 = solutions1{14};  z2hist=[z2hist Z2];     S2logic=Z2(:,1);
+    N2 = solutions1{15};  n2hist=[n2hist N2];     N2logic=N2(:,1);    
     
     if diagnostics == 1
         error('you are close, keep trying 1');
@@ -292,10 +293,9 @@ for i = 1:30
     ahist = [ahist past_a];
     dhist = [dhist d12];
     A1hist =[A1hist A1];
-    d12 = d12+T*(vel(2:(nv+1))-ones(nv,1)*vel(1));
+    d12 = d12+T*(vel(2:(2+1))-ones(2,1)*vel(1));
     pause(0.05)   
-    % The measured disturbance actually isn't constant, it changes slowly
-%     disturbance = 0.99*disturbance + 0.01*randn(1);
+
 end
 
 
