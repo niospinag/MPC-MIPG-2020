@@ -56,10 +56,13 @@ a = sdpvar(ones(1,N+1),ones(1,N+1)); %aceleracion actual del vehiculo
 z = sdpvar(ones(1,N+1),ones(1,N+1)); %carril actual
 
 v_2 = sdpvar(1,nv);     v_3 = sdpvar(1,nv); %velocidad del otro vehculo
+v_4 = sdpvar(1,nv);     v_5 = sdpvar(1,nv); %velocidad del otro vehculo
 z_2 = sdpvar(1,nv);     z_3 = sdpvar(1,nv); %carril del vehiculo j
+z_4 = sdpvar(1,nv);     z_5 = sdpvar(1,nv); %carril del vehiculo j
 dis12 = sdpvar(ones(1,N+1)*nv,ones(1,N+1));     dis13 = sdpvar(ones(1,N+1)*nv,ones(1,N+1)); %distancia entre vehiculo 1 y 2
+dis14 = sdpvar(ones(1,N+1)*nv,ones(1,N+1));     dis15 = sdpvar(ones(1,N+1)*nv,ones(1,N+1)); %distancia entre vehiculo 1 y 2
 
-a1 = binvar(1,nv);      a2 = binvar(1,nv);      a3 = binvar(1,nv);      a4 = binvar(1,nv);
+a1 = binvar(1,nv);      a2 = binvar(1,nv);      a3 = binvar(1);      a4 = binvar(1,nv);
 g1 = binvar(1,nv);      g2 = binvar(1,nv);      g3 = binvar(1,nv);      g4 = binvar(1,nv);
 Aa1 = binvar(1,nv);     Aa2 = binvar(1,nv);     Aa3 = binvar(1,nv);     Aa4 = binvar(1,nv);
 Bb1 = binvar(1,nv);     Bb2 = binvar(1,nv);     Bb3 = binvar(1,nv);     Bb4 = binvar(1,nv);
@@ -70,11 +73,11 @@ b1 = binvar(1,nv);      b2 = binvar(1,nv);      b3 = binvar(1,nv);      b4 = bin
 z1 = binvar(1,nv);      z2 = binvar(1,nv);      z3 = binvar(1,nv);      z4 = binvar(1,nv);
 n1 = binvar(1,nv);      n2 = binvar(1,nv);      n3 = binvar(1,nv);      n4 = binvar(1,nv);
 
-D1 = binvar(3,1,nv);    D2 = binvar(3,1,nv);    D3 = binvar(3,1,nv);    D4 = binvar(3,1,nv);
-G1 = binvar(3,1,nv);    G2 = binvar(3,1,nv);    G3 = binvar(3,1,nv);    G4 = binvar(3,1,nv);
-B1 = binvar(2,1,nv);    B2 = binvar(2,1,nv);    B3 = binvar(2,1,nv);B4 = binvar(2,1,nv);
-Z1 = binvar(5,1,nv);    Z2 = binvar(5,1,nv);    Z3 = binvar(5,1,nv);Z4 = binvar(5,1,nv);
-N1 = binvar(3,1,nv);    N2 = binvar(3,1,nv);    N3 = binvar(3,1,nv);N4 = binvar(3,1,nv);
+D1 = binvar(3,1,nv);    D2 = binvar(3,1,nv);    D3 = binvar(3,1);    D4 = binvar(3,1,nv);
+G1 = binvar(3,1,nv);    G2 = binvar(3,1,nv);    G3 = binvar(3,1);    G4 = binvar(3,1,nv);
+B1 = binvar(2,1,nv);    B2 = binvar(2,1,nv);    B3 = binvar(2,1);    B4 = binvar(2,1,nv);
+Z1 = binvar(5,1,nv);    Z2 = binvar(5,1,nv);    Z3 = binvar(5,1);    Z4 = binvar(5,1,nv);
+N1 = binvar(3,1,nv);    N2 = binvar(3,1,nv);    N3 = binvar(3,1);    N4 = binvar(3,1,nv);
 
 p_a = sdpvar(1);
 p_z = sdpvar(1);
@@ -91,6 +94,8 @@ for k = 1:N
     constraints = [constraints ,1<=    z{k}     <= L,
                                1 <=    z_2      <= L,%tome valores posibles
                                1 <=    z_3      <= L,%tome valores posibles
+                               1 <=    z_4      <= L,%tome valores posibles
+                               1 <=    z_5      <= L,%tome valores posibles
                                 0<=    v{k+1}   <= V_max,%no exceda las velocidades 
                          z{k}-[1]<=    z{k+1}   <=z{k}+[1],
                            -A_max<=    a{k}     <= A_max];%paso de un carril
@@ -98,7 +103,7 @@ for k = 1:N
     constraints = [constraints, v{k+1} == v{k}+T*a{k}];%velocidad futura
   
     for i=1:nv
-% ------------------------------------vehiculo 1-------------------------------    
+% ------------------------------------vehiculo 2-------------------------------    
 %------------------si dz=0  -------------------->>>    dij>= Ds----------------
 
     constraints = [constraints, -10000  <=  dis12{k+1}(i) <= 100000,
@@ -143,12 +148,12 @@ constraints = [constraints,  Aa1(i)*(Bb1(i)*(Ds - dis12{k+1}(i))+(1-Bb1(i))*(Ds 
 constraints = [constraints,  Aa1(i)*Gg1(i)*(-Bb1(i)*(T*(v_2(i)-v{k})+dis12{k}(i))+(1-Bb1(i))*(T*(v_2(i)-v{k})+dis12{k}(i)))<=0];
 constraints = [constraints, Ss1(i)*(Nn1(i))*(z{k}-p_z)==0];
 
-% ------------------------------------vehiculo 2-------------------------------    
+% ------------------------------------vehiculo 3-------------------------------    
 %------------------si dz=0  -------------------->>>    dij>= Ds----------------
 
     constraints = [constraints, -10000  <=  dis13{k+1}(i) <= 100000,
                                   mmin  <= z_3(i)-z{k+1}  <= Mmax];
-    constraints = [constraints, dis13{k+1}(i) == dis13{k}(i)+T*(v_2(i)-v{k})];
+    constraints = [constraints, dis13{k+1}(i) == dis13{k}(i)+T*(v_3(i)-v{k})];
 %.........................alpha...............................
 constraints = [constraints, [D2(1,1,i)+D2(2,1,i)+D2(3,1,i)==1], 
               implies( D2(1,1,i), [ a2(i)==0, z_3(i)-z{k} <=-0.2 ]);
@@ -185,8 +190,100 @@ constraints = [constraints, [sum(N2,1,i)==1],
               implies( N2(3,1,i), [ n2(i)==0,  Dl<= dis13{1}(i)]) ];   
 %................................................................................
 constraints = [constraints,  Aa2(i)*(Bb2(i)*(Ds - dis13{k+1}(i))+(1-Bb2(i))*(Ds + dis13{k+1}(i)))<=0];
-constraints = [constraints,  Aa2(i)*Gg2(i)*(-Bb2(i)*(T*(v_2(i)-v{k})+dis13{k}(i))+(1-Bb2(i))*(T*(v_2(i)-v{k})+dis13{k}(i)))<=0];
+constraints = [constraints,  Aa2(i)*Gg2(i)*(-Bb2(i)*(T*(v_3(i)-v{k})+dis13{k}(i))+(1-Bb2(i))*(T*(v_3(i)-v{k})+dis13{k}(i)))<=0];
 constraints = [constraints, Ss2(i)*(Nn2(i))*(z{k}-p_z)==0];
+
+
+% ------------------------------------vehiculo 4-------------------------------    
+%------------------si dz=0  -------------------->>>    dij>= Ds----------------
+
+    constraints = [constraints, -10000  <=  dis14{k+1}(i) <= 100000,
+                                  mmin  <= z_4(i)-z{k+1}  <= Mmax];
+    constraints = [constraints, dis14{k+1}(i) == dis14{k}(i)+T*(v_4(i)-v{k})];
+%.........................alpha...............................
+constraints = [constraints, [D3(1,1)+D3(2,1)+D3(3,1)==1], 
+              implies( D3(1,1), [ a3==0, z_4-z{k} <=-0.2 ]);
+              implies( D3(2,1), [ a3==1, -0.2<=z_4-z{k} <=0.2 ]);
+              implies( D3(3,1), [ a3==0, 0.2 <= z_4-z{k} ]) ];
+%.........................Beta...............................
+constraints = [constraints, [sum(B3,1,i)==1], 
+              implies(B3(1,1,i),[ b3(i)==1, dis14{1}(i) >=0 ]);
+              implies(B3(2,1,i),[ b3(i)==0, dis14{1}(i) <=0 ]) ];
+          
+constraints = [constraints, [dis14{1}(i)<=100000]]; 
+
+% %.........................Gamma...............................
+constraints = [constraints, [G3(1,1,i)+G3(2,1,i)+G3(3,1,i)==1], 
+              implies( G3(1,1,i), [ g3(i)==0, z_4(i)-z{k+1} <=-0.1 ]);
+              implies( G3(2,1,i), [ g3(i)==1, -0.1<=z_4(i)-z{k+1} <=0.2 ]);
+              implies( G3(3,1,i), [ g3(i)==0, 0.1 <= z_4(i)-z{k+1} ]) ];   
+          
+constraints = [constraints, [1<=z{k+1}<=L]];           
+
+% %.........................Lateral distance...............................
+constraints = [constraints, [sum(Z3,1,i)==1], 
+              implies( Z3(1,1,i), [ z3(i)==0,       z_4(i)-z{k} <= -1.1 ]);
+              implies( Z3(2,1,i), [ z3(i)==1, -1.1<=z_4(i)-z{k} <= -0.9 ]);
+              implies( Z3(3,1,i), [ z3(i)==0, -0.9<=z_4(i)-z{k} <= 0.9 ]);
+              implies( Z3(4,1,i), [ z3(i)==1,  0.9<=z_4(i)-z{k} <= 1.1 ]);
+              implies( Z3(5,1,i), [ z3(i)==0,            1.1 <= z_4(i)-z{k} ]) ];   
+constraints = [constraints, [1<=p_z<=L]];
+
+% %.........................lateral safety distance...............................
+constraints = [constraints, [sum(N3,1,i)==1], 
+              implies( N3(1,1,i), [ n3(i)==0,       dis14{1}(i) <= -Dl]);
+              implies( N3(2,1,i), [ n3(i)==1, -Dl<= dis14{1}(i) <= Dl ]);
+              implies( N3(3,1,i), [ n3(i)==0,  Dl<= dis14{1}(i)]) ];   
+%................................................................................
+constraints = [constraints,  Aa3(i)*(Bb3(i)*(Ds - dis14{k+1}(i))+(1-Bb3(i))*(Ds + dis14{k+1}(i)))<=0];
+constraints = [constraints,  Aa3(i)*Gg3(i)*(-Bb3(i)*(T*(v_4(i)-v{k})+dis14{k}(i))+(1-Bb3(i))*(T*(v_4(i)-v{k})+dis14{k}(i)))<=0];
+constraints = [constraints, Ss3(i)*(Nn3(i))*(z{k}-p_z)==0];
+
+% ------------------------------------vehiculo 5-------------------------------    
+%------------------si dz=0  -------------------->>>    dij>= Ds----------------
+
+    constraints = [constraints, -10000  <=  dis15{k+1}(i) <= 100000,
+                                  mmin  <= z_5(i)-z{k+1}  <= Mmax];
+    constraints = [constraints, dis15{k+1}(i) == dis15{k}(i)+T*(v_5(i)-v{k})];
+%.........................alpha...............................
+constraints = [constraints, [D4(1,1,i)+D4(2,1,i)+D4(3,1,i)==1], 
+              implies( D4(1,1,i), [ a4(i)==0, z_5(i)-z{k} <=-0.2 ]);
+              implies( D4(2,1,i), [ a4(i)==1, -0.2<=z_5(i)-z{k} <=0.2 ]);
+              implies( D4(3,1,i), [ a4(i)==0, 0.2 <= z_5(i)-z{k} ]) ];
+%.........................Beta...............................
+constraints = [constraints, [sum(B4,1,i)==1], 
+              implies(B4(1,1,i),[ b4(i)==1, dis15{1}(i) >=0 ]);
+              implies(B4(2,1,i),[ b4(i)==0, dis15{1}(i) <=0 ]) ];
+          
+constraints = [constraints, [dis15{1}(i)<=100000]]; 
+
+% %.........................Gamma...............................
+constraints = [constraints, [G4(1,1,i)+G4(2,1,i)+G4(3,1,i)==1], 
+              implies( G4(1,1,i), [ g4(i)==0, z_5(i)-z{k+1} <=-0.1 ]);
+              implies( G4(2,1,i), [ g4(i)==1, -0.1<=z_5(i)-z{k+1} <=0.2 ]);
+              implies( G4(3,1,i), [ g4(i)==0, 0.1 <= z_5(i)-z{k+1} ]) ];   
+          
+constraints = [constraints, [1<=z{k+1}<=L]];           
+
+% %.........................Lateral distance...............................
+constraints = [constraints, [sum(Z4,1,i)==1], 
+              implies( Z4(1,1,i), [ z4(i)==0,       z_5(i)-z{k} <= -1.1 ]);
+              implies( Z4(2,1,i), [ z4(i)==1, -1.1<=z_5(i)-z{k} <= -0.9 ]);
+              implies( Z4(3,1,i), [ z4(i)==0, -0.9<=z_5(i)-z{k} <= 0.9 ]);
+              implies( Z4(4,1,i), [ z4(i)==1,  0.9<=z_5(i)-z{k} <= 1.1 ]);
+              implies( Z4(5,1,i), [ z4(i)==0,            1.1 <= z_5(i)-z{k} ]) ];   
+constraints = [constraints, [1<=p_z<=L]];
+
+% %.........................lateral safety distance...............................
+constraints = [constraints, [sum(N4,1,i)==1], 
+              implies( N4(1,1,i), [ n4(i)==0,       dis15{1}(i) <= -Dl]);
+              implies( N4(2,1,i), [ n4(i)==1, -Dl<= dis15{1}(i) <= Dl ]);
+              implies( N4(3,1,i), [ n4(i)==0,  Dl<= dis15{1}(i)]) ];   
+%................................................................................
+constraints = [constraints,  Aa4(i)*(Bb4(i)*(Ds - dis15{k+1}(i))+(1-Bb4(i))*(Ds + dis15{k+1}(i)))<=0];
+constraints = [constraints,  Aa4(i)*Gg4(i)*(-Bb4(i)*(T*(v_5(i)-v{k})+dis15{k}(i))+(1-Bb4(i))*(T*(v_5(i)-v{k})+dis15{k}(i)))<=0];
+constraints = [constraints, Ss4(i)*(Nn4(i))*(z{k}-p_z)==0];
+
 
     % It is EXTREMELY important to add as many
     % constraints as possible to the binary variables
@@ -197,41 +294,51 @@ objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); %
 
 parameters_in = {Vd,Zd,v{1},p_a,p_z,...
                             v_2,z_2,dis12{1},Aa1,Bb1,Gg1,Ss1,Nn1,...
-                            v_3,z_3,dis13{1},Aa2,Bb2,Gg2,Ss2,Nn2};
+                            v_3,z_3,dis13{1},Aa2,Bb2,Gg2,Ss2,Nn2,...
+                            v_4,z_4,dis14{1},Aa3,Bb3,Gg3,Ss3,Nn3,...
+                            v_5,z_5,dis15{1},Aa4,Bb4,Gg4,Ss4,Nn4};
 solutions_out = {[a{:}], [z{:}], [v{:}], [a1], [dis12{:}], [b1], [g1], [z1], [n1]...
-                                         [a2], [dis13{:}], [b2], [g2], [z2], [n2]};
+                                         [a2], [dis13{:}], [b2], [g2], [z2], [n2]...
+                                         [a3], [dis14{:}], [b3], [g3], [z3], [n3]...
+                                         [a4], [dis15{:}], [b4], [g4], [z4], [n4]};
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','gurobi'),parameters_in,solutions_out);
 %------condiciones iniciales----------
-vel=[15; 15; 10; 20];% velociodad inicial
-zel=[5; 2; 1; 3]; %carril inicial
-zel2=[zel(2); zel(1); zel(3); zel(4)]; %carril inicial
-zel3=[zel(3); zel(1); zel(2); zel(4)]; %carril inicial
-zel4=[zel(4); zel(1); zel(2); zel(3)]; %carril inicial
-Vdes=[5; 20; 25; 10]; %velocidad deseada
-Zdes=[1; 4; 3; 5];
+vel=[15; 15; 10; 20; 15];% velociodad inicial
+zel=[5; 2; 1; 3; 4]; %carril inicial
+zel2=[zel(2); zel(1); zel(3); zel(4); zel(5)]; %carril inicial
+zel3=[zel(3); zel(1); zel(2); zel(4); zel(5)]; %carril inicial
+zel4=[zel(4); zel(1); zel(2); zel(3); zel(5)]; %carril inicial
+zel5=[zel(5); zel(1); zel(2); zel(3); zel(4)]; %carril inicial
+Vdes=[5; 20; 25; 10; 10]; %velocidad deseada
+Zdes=[1; 4; 3; 5; 2];
 %---distancia inicial de cada agente
 % disij= Zj-zi
-d1i = [10; 0; 0];
-d2i = [-d1i(1); -d1i(1)+d1i(2); -d1i(1)+d1i(3)];
-d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3)];
-past_a=[0 0 0]';
+d1i = [10; 0; 0; -10];
+d2i = [-d1i(1); -d1i(1)+d1i(2); -d1i(1)+d1i(3); -d1i(1)+d1i(4)];
+d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3); -d1i(2)+d1i(4)];
+d4i = [-d1i(3); -d1i(3)+d1i(1); -d1i(3)+d1i(2); -d1i(3)+d1i(4)];
+past_a=[0 0 0 0]';
 
 %define las condiciones iniciales que deben tener las variables
 %logicas
- %........vehiculo 1....................vehiculo 2...........
- alogic1_1=[0]; alogic2_1=[0];   alogic1_2=[0]; alogic2_2=[0];
- blogic1_1=[1]; blogic2_1=[0];   blogic1_2=[1]; blogic2_2=[0];
- G1logic_1=[1]; G2logic_1=[1];   G1logic_2=[1]; G2logic_2=[1];
- S1logic_1=[1]; S2logic_1=[1];   S1logic_2=[1]; S2logic_2=[1];
- N1logic_1=[1]; N2logic_1=[1];   N1logic_2=[1]; N2logic_2=[1];
-%........vehiculo 3....................vehiculo 4...........
- alogic1_3=[0]; alogic2_3=[0];   alogic1_4=[0]; alogic2_4=[0];
- blogic1_3=[1]; blogic2_3=[0];   blogic1_4=[1]; blogic2_4=[0];
- G1logic_3=[1]; G2logic_3=[1];   G1logic_4=[1]; G2logic_4=[1];
- S1logic_3=[1]; S2logic_3=[1];   S1logic_4=[1]; S2logic_4=[1];
- N1logic_3=[1]; N2logic_3=[1];   N1logic_4=[1]; N2logic_4=[1];
 
+ %.....................vehiculo 1.....................................................vehiculo 2
+ 
+ alogic1_1=[0]; alogic2_1=[0];alogic3_1=[0]; alogic4_1=[0];     alogic1_2=[0]; alogic2_2=[0];alogic3_2=[0]; alogic4_2=[0];
+ blogic1_1=[1]; blogic2_1=[0];blogic3_1=[1]; blogic4_1=[0];     blogic1_2=[1]; blogic2_2=[0];blogic3_2=[1]; blogic4_2=[0];
+ G1logic_1=[1]; G2logic_1=[1];G3logic_1=[1]; G2logic_1=[1];     G1logic_2=[1]; G2logic_2=[1];G3logic_2=[1]; G2logic_2=[1];
+ S1logic_1=[1]; S2logic_1=[1];S3logic_1=[1]; S2logic_1=[1];     S1logic_2=[1]; S2logic_2=[1];S3logic_2=[1]; S2logic_2=[1];
+ N1logic_1=[1]; N2logic_1=[1];N3logic_1=[1]; N2logic_1=[1];     N1logic_2=[1]; N2logic_2=[1];N3logic_2=[1]; N2logic_2=[1];
+
+ %.....................vehiculo
+%3.....................................................vehiculo 4
+ 
+ alogic1_3=[0]; alogic2_3=[0];alogic3_3=[0]; alogic4_3=[0];     alogic1_4=[0]; alogic2_4=[0];alogic3_4=[0]; alogic4_4=[0];
+ blogic1_3=[1]; blogic2_3=[0];blogic3_3=[1]; blogic4_3=[0];     blogic1_4=[1]; blogic2_4=[0];blogic3_4=[1]; blogic4_4=[0];
+ G1logic_3=[1]; G2logic_3=[1];G3logic_3=[1]; G2logic_3=[1];     G1logic_4=[1]; G2logic_4=[1];G3logic_4=[1]; G2logic_4=[1];
+ S1logic_3=[1]; S2logic_3=[1];S3logic_3=[1]; S2logic_3=[1];     S1logic_4=[1]; S2logic_4=[1];S3logic_4=[1]; S2logic_4=[1];
+ N1logic_3=[1]; N2logic_3=[1];N3logic_3=[1]; N2logic_3=[1];     N1logic_4=[1]; N2logic_4=[1];N3logic_4=[1]; N2logic_4=[1];
 def_condinicial(zel,  d1i,Dl,alogic1_1,alogic2_1,blogic1_1,blogic2_1,G1logic_1,G2logic_1,S1logic_1,S2logic_1,N1logic_1,N2logic_1);
 def_condinicial(zel2, d2i,Dl,alogic1_2,alogic2_2,blogic1_2,blogic2_2,G1logic_2,G2logic_2,S1logic_2,S2logic_2,N1logic_2,N2logic_2);
 def_condinicial(zel3, d3i,Dl,alogic1_3,alogic2_3,blogic1_3,blogic2_3,G1logic_3,G2logic_3,S1logic_3,S2logic_3,N1logic_3,N2logic_3);
@@ -259,12 +366,18 @@ dhist = d1i;
 for i = 1:30
 % parameters_in = {Vd,Zd,v{1},p_a,p_z,...
 %                             v_2,z_2,dis12{1},Aa1,Bb1,Gg1,Ss1,Nn1,...
-%                             v_3,z_3,dis13{1},Aa2,Bb2,Gg2,Ss2,Nn2};
+%                             v_3,z_3,dis13{1},Aa2,Bb2,Gg2,Ss2,Nn2,...
+%                             v_4,z_4,dis14{1},Aa3,Bb3,Gg3,Ss3,Nn3,...
+%                             v_5,z_5,dis15{1},Aa4,Bb4,Gg4,Ss4,Nn4};
 % solutions_out = {[a{:}], [z{:}], [v{:}], [a1], [dis12{:}], [b1], [g1], [z1], [n1]...
-%                                          [a2], [dis13{:}], [b2], [g2], [z2], [n2]};
+%                                          [a2], [dis13{:}], [b2], [g2], [z2], [n2]...
+%                                          [a3], [dis14{:}], [b3], [g3], [z3], [n3]...
+%                                          [a4], [dis15{:}], [b4], [g4], [z4], [n4]};
     inputs = {Vdes(1),Zdes(1),vel(1),past_a(1),zel(1),...
                         vel(2),zel(2),d1i(1),alogic1_1,blogic1_1,G1logic_1,S1logic_1,N1logic_1,...
-                        vel(3),zel(3),d1i(2),alogic2_1,blogic2_1,G2logic_1,S2logic_1,N2logic_1};
+                        vel(3),zel(3),d1i(2),alogic2_1,blogic2_1,G2logic_1,S2logic_1,N2logic_1,...
+                        vel(4),zel(4),d1i(3),alogic3_1,blogic3_1,G3logic_1,S3logic_1,N3logic_1,...
+                        vel(5),zel(5),d1i(4),alogic4_1,blogic4_1,G4logic_1,S4logic_1,N4logic_1};
     [solutions1,diagnostics] = controller1{inputs};    
      
     A = solutions1{1};past_a(1) = A(:,1);
@@ -276,12 +389,28 @@ for i = 1:30
     Gg1 = solutions1{7}; g1hist=[g1hist Gg1];    G1logic_1=Gg1(:,1);
     Z1 = solutions1{8};  z1hist=[z1hist Z1];     S1logic_1=Z1(:,1);
     N1 = solutions1{9};  n1hist=[n1hist N1];     N1logic_1=N1(:,1);
+    
     A2 = solutions1{10};                         alogic2_1=A2(:,1);
     g2 = solutions1{11};  g2hist=[g2hist g2];
     B2 = solutions1{12};  b2hist=[b2hist B2];    blogic2_1=B2(:,1);
     Gg2 = solutions1{13}; g2hist=[g2hist Gg2];   G2logic_1=Gg2(:,1);
     Z2 = solutions1{14};  z2hist=[z2hist Z2];    S2logic_1=Z2(:,1);
     N2 = solutions1{15};  n2hist=[n2hist N2];    N2logic_1=N2(:,1);    
+    
+    A3 = solutions1{16};                          alogic3_1=A3(:,1);
+    g3 = solutions1{17};  %g1hist=[g1hist g1];
+    B3 = solutions1{18};  b3hist=[b3hist B3];     blogic3_1=B3(:,1);
+    Gg3 = solutions1{19}; g3hist=[g3hist Gg3];    G3logic_1=Gg3(:,1);
+    Z3 = solutions1{20};  z3hist=[z3hist Z3];     S3logic_1=Z3(:,1);
+    N3 = solutions1{21};  n3hist=[n3hist N3];     N3logic_1=N3(:,1);
+    
+    A4 = solutions1{22};                         alogic4_1=A4(:,1);
+    g4 = solutions1{23};  g4hist=[g4hist g4];
+    B4 = solutions1{24};  b4hist=[b4hist B4];    blogic4_1=B4(:,1);
+    Gg4 = solutions1{25}; g4hist=[g4hist Gg4];   G4logic_1=Gg4(:,1);
+    Z4 = solutions1{26};  z4hist=[z4hist Z4];    S4logic_1=Z4(:,1);
+    N4 = solutions1{27};  n2hist=[n4hist N4];    N4logic_1=N4(:,1); 
+  
     
     A1hist =[A1hist A1];    
     
@@ -315,7 +444,7 @@ inputs2 = {Vdes(2),Zdes(2),vel(2),past_a(2),zel(2),...
     N2 = solutions2{15};  n2hist=[n2hist N2];   N2logic_2=N2(:,1); 
    
 %     A2hist =[A2hist A2];    
-    d2i = d2i+T*(vel(2:(2+1))-ones(2,1)*vel(1));
+%     d2i = d2i+T*(vel(2:(2+1))-ones(2,1)*vel(1));
    
     if diagnostics2 == 1
         error('you are close, keep trying 2');
@@ -327,8 +456,10 @@ inputs2 = {Vdes(2),Zdes(2),vel(2),past_a(2),zel(2),...
 %     stairs(1:i,xhist(1,:),'g')
     %---------------------------------------------- 
     d1i = d1i+T*(vel(2:(size(vel,1)))-ones((size(vel,1)-1),1)*vel(1));
-    d2i = [-d1i(1); -d1i(1)+d1i(2); -d1i(1)+d1i(3)];
-    d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3)];
+    d2i = [-d1i(1); -d1i(1)+d1i(2); -d1i(1)+d1i(3); -d1i(1)+d1i(4)];
+    d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3); -d1i(2)+d1i(4)];
+    d4i = [-d1i(3); -d1i(3)+d1i(1); -d1i(3)+d1i(2); -d1i(3)+d1i(4)];
+    
     
     vel = vel+T*past_a;
     vhist = [vhist vel];
