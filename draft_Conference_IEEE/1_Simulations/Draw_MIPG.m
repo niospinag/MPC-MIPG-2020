@@ -109,7 +109,7 @@ hold on;
 %------------agente 2------------
     plot(x_2(k),y_2(k),'-r','linewidth',line_width);hold on % plot exhibited trajectory
     if k < size(vhist,2) % plot prediction
-        plot(xp_2(k,1:N),zph_2(k,1:N),'r--*')
+        plot(xp_2(k,1:N),zp2hist(k,1:N),'r--*')
     end
     plot(x_2(k)+xp,y_2(k)+yp,'--r')% plot robot circle
 %------------agente 3------------
@@ -125,7 +125,7 @@ hold on;
     ylabel('$y$-position (m)','interpreter','latex','FontSize',fontsize_labels)
     xlabel('$x$-position (m)','interpreter','latex','FontSize',fontsize_labels)
     axis([-0.2 200 -0.2 6])%Axis description
-    pause(0.1)
+    pause(0.3)
     box on;
     grid on
     %aviobj = addframe(aviobj,gcf);
