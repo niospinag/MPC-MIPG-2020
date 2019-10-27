@@ -40,7 +40,7 @@ set(gcf,'Units','normalized','OuterPosition',[0 0 1 0.5]);%tamaño del grafico
 % 
 % xp_1=[T*vphist(1,:)];
 % xp_2=dhist(1:(size(vphist,2)));
-% zph_2=ones(81,size(vp1hist,2))*zhist(2);
+zph_3=ones(81,size(vp1hist,2))*zhist(3);
 zph_4=ones(81,size(vp1hist,2))*zhist(4);
 % for k = 1:size(vphist,1)
 % xp_1(k+1,:)=xp_1(k,:)+T*vphist(k,:);
@@ -84,7 +84,7 @@ end
 for j = 1:size(vp3hist,1)
     xp_4(j+1,1)=xp_4(j,1)+T*vhist(4,j);   
     for i = 1:(size(vp3hist,2)-1)
-        xp_4(j,i+1)=xp_4(j,i)+T*vhist(4,i);
+        xp_4(j,i+1)=xp_4(j,i)+T*vhist(4,1);
     end
 
 end
@@ -147,7 +147,7 @@ hold on;
     ylabel('$y$-position (m)','interpreter','latex','FontSize',fontsize_labels)
     xlabel('$x$-position (m)','interpreter','latex','FontSize',fontsize_labels)
     axis([-0.2 400 -0.2 6])%Axis description
-    pause(0.3)
+    pause(0.5)
     box on;
     grid on
     %aviobj = addframe(aviobj,gcf);

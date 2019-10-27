@@ -131,11 +131,11 @@ constraints = [constraints, [1<=z{k+1}<=L]];
 
 % %.........................Lateral distance...............................
 constraints = [constraints, [sum(Z1,1,i)==1], 
-              implies( Z1(1,1,i), [ z1==0,       z_2-z{k} <= -1.1 ]);
-              implies( Z1(2,1,i), [ z1==1, -1.1<=z_2-z{k} <= -0.9 ]);
-              implies( Z1(3,1,i), [ z1==0, -0.9<=z_2-z{k} <= 0.9 ]);
-              implies( Z1(4,1,i), [ z1==1,  0.9<=z_2-z{k} <= 1.1 ]);
-              implies( Z1(5,1,i), [ z1==0,            1.1 <= z_2-z{k} ]) ];   
+              implies( Z1(1,1,i), [ z1==0,       z_2-p_z <= -1.1 ]);
+              implies( Z1(2,1,i), [ z1==1, -1.1<=z_2-p_z <= -0.9 ]);
+              implies( Z1(3,1,i), [ z1==0, -0.9<=z_2-p_z <= 0.9 ]);
+              implies( Z1(4,1,i), [ z1==1,  0.9<=z_2-p_z <= 1.1 ]);
+              implies( Z1(5,1,i), [ z1==0,            1.1 <= z_2-p_z ]) ];   
 constraints = [constraints, [1<=p_z<=L]];
 
 % %.........................lateral safety distance...............................
@@ -146,7 +146,7 @@ constraints = [constraints, [sum(N1,1,i)==1],
 %................................................................................
 constraints = [constraints,  Aa1*(Bb1*(Ds - dis12{k+1})+(1-Bb1)*(Ds + dis12{k+1}))<=0];
 constraints = [constraints,  Aa1*Gg1*(-Bb1*(T*(v_2-v{k})+dis12{k})+(1-Bb1)*(T*(v_2-v{k})+dis12{k}))<=0];
-constraints = [constraints, Ss1*(Nn1)*(z{k}-p_z)==0];
+constraints = [constraints, (Ss1)*(Nn1)*(z{k}-p_z)==0];
 
 % ------------------------------------vehiculo 3-------------------------------    
 %------------------si dz=0  -------------------->>>    dij>= Ds----------------
@@ -176,11 +176,11 @@ constraints = [constraints, [1<=z{k+1}<=L]];
 
 % %.........................Lateral distance...............................
 constraints = [constraints, [sum(Z2,1,i)==1], 
-              implies( Z2(1,1,i), [ z2==0,       z_3-z{k} <= -1.1 ]);
-              implies( Z2(2,1,i), [ z2==1, -1.1<=z_3-z{k} <= -0.9 ]);
-              implies( Z2(3,1,i), [ z2==0, -0.9<=z_3-z{k} <= 0.9 ]);
-              implies( Z2(4,1,i), [ z2==1,  0.9<=z_3-z{k} <= 1.1 ]);
-              implies( Z2(5,1,i), [ z2==0,            1.1 <= z_3-z{k} ]) ];   
+              implies( Z2(1,1,i), [ z2==0,       z_3-p_z <= -1.1 ]);
+              implies( Z2(2,1,i), [ z2==1, -1.1<=z_3-p_z <= -0.9 ]);
+              implies( Z2(3,1,i), [ z2==0, -0.9<=z_3-p_z <= 0.9 ]);
+              implies( Z2(4,1,i), [ z2==1,  0.9<=z_3-p_z <= 1.1 ]);
+              implies( Z2(5,1,i), [ z2==0,            1.1 <= z_3-p_z ]) ];   
 constraints = [constraints, [1<=p_z<=L]];
 
 % %.........................lateral safety distance...............................
@@ -238,51 +238,6 @@ constraints = [constraints, [sum(N3,1,i)==1],
 constraints = [constraints,  Aa3*(Bb3*(Ds - dis14{k+1})+(1-Bb3)*(Ds + dis14{k+1}))<=0];
 constraints = [constraints,  Aa3*Gg3*(-Bb3*(T*(v_4-v{k})+dis14{k})+(1-Bb3)*(T*(v_4-v{k})+dis14{k}))<=0];
 constraints = [constraints, Ss3*(Nn3)*(z{k}-p_z)==0];
-% 
-% % ------------------------------------vehiculo 5-------------------------------    
-% %------------------si dz=0  -------------------->>>    dij>= Ds----------------
-% 
-%     constraints = [constraints, -10000  <=  dis15{k+1} <= 100000,
-%                                   mmin  <= z_5-z{k+1}  <= Mmax];
-%     constraints = [constraints, dis15{k+1} == dis15{k}+T*(v_5-v{k})];
-% %.........................alpha...............................
-% constraints = [constraints, [D4(1,1,i)+D4(2,1,i)+D4(3,1,i)==1], 
-%               implies( D4(1,1,i), [ a4==0, z_5-z{k} <=-0.1 ]);
-%               implies( D4(2,1,i), [ a4==1, -0.1<=z_5-z{k} <=0.1 ]);
-%               implies( D4(3,1,i), [ a4==0, 0.1 <= z_5-z{k} ]) ];
-% %.........................Beta...............................
-% constraints = [constraints, [sum(B4,1,i)==1], 
-%               implies(B4(1,1,i),[ b4==1, dis15{1} >=0 ]);
-%               implies(B4(2,1,i),[ b4==0, dis15{1} <=0 ]) ];
-%           
-% constraints = [constraints, [dis15{1}<=100000]]; 
-% 
-% % %.........................Gamma...............................
-% constraints = [constraints, [G4(1,1,i)+G4(2,1,i)+G4(3,1,i)==1], 
-%               implies( G4(1,1,i), [ g4==0, z_5-z{k+1} <=-0.1 ]);
-%               implies( G4(2,1,i), [ g4==1, -0.1<=z_5-z{k+1} <=0.1 ]);
-%               implies( G4(3,1,i), [ g4==0, 0.1 <= z_5-z{k+1} ]) ];   
-%           
-% constraints = [constraints, [1<=z{k+1}<=L]];           
-% 
-% % %.........................Lateral distance...............................
-% constraints = [constraints, [sum(Z4,1,i)==1], 
-%               implies( Z4(1,1,i), [ z4==0,       z_5-z{k} <= -1.1 ]);
-%               implies( Z4(2,1,i), [ z4==1, -1.1<=z_5-z{k} <= -0.9 ]);
-%               implies( Z4(3,1,i), [ z4==0, -0.9<=z_5-z{k} <= 0.9 ]);
-%               implies( Z4(4,1,i), [ z4==1,  0.9<=z_5-z{k} <= 1.1 ]);
-%               implies( Z4(5,1,i), [ z4==0,            1.1 <= z_5-z{k} ]) ];   
-% constraints = [constraints, [1<=p_z<=L]];
-% 
-% % %.........................lateral safety distance...............................
-% constraints = [constraints, [sum(N4,1,i)==1], 
-%               implies( N4(1,1,i), [ n4==0,       dis15{1} <= -Dl]);
-%               implies( N4(2,1,i), [ n4==1, -Dl<= dis15{1} <= Dl ]);
-%               implies( N4(3,1,i), [ n4==0,  Dl<= dis15{1}]) ];   
-% %................................................................................
-% constraints = [constraints,  Aa4*(Bb4*(Ds - dis15{k+1})+(1-Bb4)*(Ds + dis15{k+1}))<=0];
-% constraints = [constraints,  Aa4*Gg4*(-Bb4*(T*(v_5-v{k})+dis15{k})+(1-Bb4)*(T*(v_5-v{k})+dis15{k}))<=0];
-% constraints = [constraints, Ss4*(Nn4)*(z{k}-p_z)==0];
 
 
     % It is EXTREMELY important to add as many
@@ -305,21 +260,21 @@ solutions_out = {[a{:}], [z{:}], [v{:}], [a1],  [b1], [g1], [z1], [n1]...
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','gurobi'),parameters_in,solutions_out);
 %------condiciones iniciales----------
-vel=[15; 20; 10; 25; 15];% velociodad inicial
-zel=[5; 2; 1; 3; 4]; %carril inicial
-zel2=[zel(2); zel(1); zel(3); zel(4); zel(5)]; %carril inicial
-zel3=[zel(3); zel(1); zel(2); zel(4); zel(5)]; %carril inicial
-zel4=[zel(4); zel(1); zel(2); zel(3); zel(5)]; %carril inicial
-zel5=[zel(5); zel(1); zel(2); zel(3); zel(4)]; %carril inicial
-Vdes=[15; 25; 35; 5; 10]; %velocidad deseada
-Zdes=[2; 3; 5; 1; 2];
+vel=[15; 20; 10; 25];% velociodad inicial
+zel=[5; 2; 1; 3]; %carril inicial
+zel2=[zel(2); zel(1); zel(3); zel(4)]; %carril inicial
+zel3=[zel(3); zel(1); zel(2); zel(4)]; %carril inicial
+zel4=[zel(4); zel(1); zel(2); zel(3)]; %carril inicial
+% zel5=[zel(5); zel(1); zel(2); zel(3); zel(4)]; %carril inicial
+Vdes=[15; 25; 35; 5]; %velocidad deseada
+Zdes=[2; 3; 5; 1];
 %---distancia inicial de cada agente
 % disij= Zj-zi
-d1i = [10; 0; 20; -10];
-d2i = [-d1i(1); -d1i(1)+d1i(2); -d1i(1)+d1i(3); -d1i(1)+d1i(4)];
-d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3); -d1i(2)+d1i(4)];
-d4i = [-d1i(3); -d1i(3)+d1i(1); -d1i(3)+d1i(2); -d1i(3)+d1i(4)];
-past_a=[0 0 0 0 0]';
+d1i = [10; 0; 20];
+d2i = [-d1i(1); -d1i(1)+d1i(2); -d1i(1)+d1i(3)];
+d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3)];
+% d4i = [-d1i(3); -d1i(3)+d1i(1); -d1i(3)+d1i(2); -d1i(3)+d1i(4)];
+past_a=[0 0 0 0]';
 
 %define las condiciones iniciales que deben tener las variables
 %logicas
@@ -344,7 +299,7 @@ past_a=[0 0 0 0 0]';
 def_condinicial(zel,  d1i,Dl,alogic1_1,alogic2_1,blogic1_1,blogic2_1,G1logic_1,G2logic_1,S1logic_1,S2logic_1,N1logic_1,N2logic_1);
 def_condinicial(zel2, d2i,Dl,alogic1_2,alogic2_2,blogic1_2,blogic2_2,G1logic_2,G2logic_2,S1logic_2,S2logic_2,N1logic_2,N2logic_2);
 def_condinicial(zel3, d3i,Dl,alogic1_3,alogic2_3,blogic1_3,blogic2_3,G1logic_3,G2logic_3,S1logic_3,S2logic_3,N1logic_3,N2logic_3);
-def_condinicial(zel4, d4i,Dl,alogic1_4,alogic2_4,blogic1_4,blogic2_4,G1logic_4,G2logic_4,S1logic_4,S2logic_4,N1logic_4,N2logic_4);
+% def_condinicial(zel4, d4i,Dl,alogic1_4,alogic2_4,blogic1_4,blogic2_4,G1logic_4,G2logic_4,S1logic_4,S2logic_4,N1logic_4,N2logic_4);
 
 
 % hold on
@@ -354,7 +309,8 @@ ahist = past_a;
 dhist = d1i;
 
 
-
+rastreo=[];
+rastreon=[];
 %
 % ...historial variables logicas
  A1hist =[0]';  A2hist =[0]';   A3hist =[0]';   A4hist =[0]';
@@ -398,7 +354,7 @@ for i = 1:30
 %     g2 = solutions1{11};  g2hist=[g2hist g2];
     B2 = solutions1{10};  b2hist=[b2hist B2];    blogic2_1=B2(:,1);
     Gg2 = solutions1{11}; g2hist=[g2hist Gg2];   G2logic_1=Gg2(:,1);
-    Z2 = solutions1{12};  z2hist=[z2hist Z2];    S2logic_1=Z2(:,1);
+    Z2 = solutions1{12};  z2hist=[z2hist Z2];    S2logic_1=1;%Z2(:,1);
     N2 = solutions1{13};  n2hist=[n2hist N2];    N2logic_1=N2(:,1);    
     
     A3 = solutions1{14};                          alogic3_1=A3(:,1);
@@ -408,6 +364,8 @@ for i = 1:30
     Z3 = solutions1{17};  z3hist=[z3hist Z3];     S3logic_1=Z3(:,1);
     N3 = solutions1{18};  n3hist=[n3hist N3];     N3logic_1=N3(:,1);
     
+    
+%     estar pendiente de s2logic_1, ahi esta el problema
 %     A4 = solutions1{22};                         alogic4_1=A4(:,1);
 %     g4 = solutions1{23};  g4hist=[g4hist g4];
 %     B4 = solutions1{24};  b4hist=[b4hist B4];    blogic4_1=B4(:,1);
@@ -472,30 +430,34 @@ inputs3 = {Vdes(3),Zdes(3),vel(3),past_a(3),zel(3),...
 
  
     
-    A = solutions3{1};past_a(3) = A(:,1);
-    Z = solutions3{2};   zel(3)=Z(:,1);          zp3hist=[zp3hist; Z];
-    V = solutions3{3};   vp3hist=[vp3hist; V];
-    A1 = solutions3{4};                         alogic1_3=A1(:,1);
-%     g1 = solutions3{5};  g1hist_3=[g1hist g1];
-    B1 = solutions3{5};  b1hist_3=[b1hist B1];  blogic1_3=B1(:,1);
-    Gg1 = solutions3{6}; g1hist_3=[g1hist Gg1]; G1logic_3=Gg1(:,1);
-    Z1 = solutions3{7};  z1hist=[z1hist Z1];    S1logic_3=Z1(:,1);
-    N1 = solutions3{8};  n1hist=[n1hist N1];    N1logic_3=N1(:,1);
+    A = solutions3{1};      past_a(3) = A(:,1);
+    Z = solutions3{2};      zel(3)=Z(:,1);          zp3hist=[zp3hist; Z];
+    V = solutions3{3};      vp3hist=[vp3hist; V];
+    A1 = solutions3{4};                             alogic1_3=A1(:,1);
+    B1 = solutions3{5};     b1hist_3=[b1hist B1];   blogic1_3=B1(:,1);
+    Gg1 = solutions3{6};    g1hist_3=[g1hist Gg1];  G1logic_3=Gg1(:,1);
+    Z1 = solutions3{7};     z1hist=[z1hist Z1];     S1logic_3=Z1(:,1);
+    N1 = solutions3{8};     n1hist=[n1hist N1];     N1logic_3=N1(:,1);
     
-    A2 = solutions3{9};                        alogic2_3=A2(:,1);
-%     g2 = solutions3{11};  g2hist=[g2hist g2];
-    B2 = solutions3{10};  b2hist=[b2hist B2];   blogic2_3=B2(:,1);
-    Gg2 = solutions3{11}; g2hist=[g2hist Gg2];  G2logic_3=Gg2(:,1);
-    Z2 = solutions3{12};  z2hist=[z2hist Z2];   S2logic_3=Z2(:,1);
-    N2 = solutions3{13};  n2hist=[n2hist N2];   N2logic_3=N2(:,1); 
+    A2 = solutions3{9};                             alogic2_3=A2(:,1);
+    B2 = solutions3{10};    b2hist=[b2hist B2];     blogic2_3=B2(:,1);
+    Gg2 = solutions3{11};   g2hist=[g2hist Gg2];    G2logic_3=Gg2(:,1);
+    Z2 = solutions3{12};    z2hist=[z2hist Z2];     S2logic_3=Z2(:,1);
+    N2 = solutions3{13};    n2hist=[n2hist N2];     N2logic_3=N2(:,1); 
    
-    A3 = solutions1{14};                          alogic3_3=A3(:,1);
-%     g3 = solutions1{17};  %g1hist=[g1hist g1];
-    B3 = solutions1{15};  b3hist=[b3hist B3];     blogic3_3=B3(:,1);
-    Gg3 = solutions1{16}; g3hist=[g3hist Gg3];    G3logic_3=Gg3(:,1);
-    Z3 = solutions1{17};  z3hist_3=[z3hist_3 Z3];     S3logic_3=Z3(:,1);
-    N3 = solutions1{18};  n3hist_3=[n3hist_3 N3];     N3logic_3=N3(:,1);
+    A3 = solutions1{14};                            alogic3_3=A3(:,1);
+    B3 = solutions1{15};    b3hist=[b3hist B3];     blogic3_3=B3(:,1);
+    Gg3 = solutions1{16};   g3hist=[g3hist Gg3];    G3logic_3=Gg3(:,1);
+    Z3 = solutions1{17};    z3hist_3=[z3hist_3 Z3]; S3logic_3=Z3(:,1);
+    N3 = solutions1{18};    n3hist_3=[n3hist_3 N3]; N3logic_3=N3(:,1);
 %     A2hist =[A2hist A2];    
+if i==4;
+    s1logic_3=1;
+end
+
+rastreo=[rastreo Z1];
+rastreon=[rastreon N1];
+
     
     if diagnostics3 == 1
         error('you are close, keep trying 3');
@@ -509,9 +471,9 @@ inputs3 = {Vdes(3),Zdes(3),vel(3),past_a(3),zel(3),...
 %     stairs(1:i,xhist(1,:),'g')
     %---------------------------------------------- 
     d1i = d1i+T*(vel(2:(size(vel,1)))-ones((size(vel,1)-1),1)*vel(1));
-    d2i = [-d1i(1); -d1i(1)+d1i(2); -d1i(1)+d1i(3); -d1i(1)+d1i(4)];
-    d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3); -d1i(2)+d1i(4)];
-    d4i = [-d1i(3); -d1i(3)+d1i(1); -d1i(3)+d1i(2); -d1i(3)+d1i(4)];
+    d2i = [-d1i(1); -d1i(1)+d1i(2); -d1i(1)+d1i(3)];
+    d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3)];
+%     d4i = [-d1i(3); -d1i(3)+d1i(1); -d1i(3)+d1i(2)];
     
     
     vel = vel+T*past_a;
