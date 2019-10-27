@@ -10,15 +10,15 @@ clc
 
 % addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\matlab\x64_win64'))%cplex
 % addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\examples\src\matlab'))%cplex
-% addpath(genpath('C:\Users\Personal\Desktop\potential games\YALMIP-master'))
-% addpath('C:\gurobi811\win64\matlab') %Gurobi
+addpath(genpath('C:\Users\Personal\Desktop\potential games\YALMIP-master'))
+addpath('C:\gurobi811\win64\matlab') %Gurobi
 
 % %---------laptop tavo
 %linux
-addpath(genpath('/home/tavocardona/gurobi811/linux64'))%cplex
-% addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
- addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
-yalmip('clear')
+% addpath(genpath('/home/tavocardona/gurobi811/linux64'))%cplex
+% % addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
+%  addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
+% yalmip('clear')
 
 % %windows
 % addpath(genpath('C:\Users\Haptico\Desktop\NESTOR\paths\gurobi')) %Gurobi
