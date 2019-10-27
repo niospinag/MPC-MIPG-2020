@@ -46,8 +46,8 @@ e=1;
 % Vd = 12;
 % Zd = 1;
 %------------estados deseados-----------
- Zd = sdpvar(repmat(1,1,1),repmat(1,1,1));%carril deseado
- Vd = sdpvar(repmat(1,1,1),repmat(1,1,1));%velocidad deseada
+ Zd = sdpvar(1,1);%carril deseado
+ Vd = sdpvar(1,1);%velocidad deseada
 
 
 % -------------vehiculo i---------------
@@ -82,16 +82,16 @@ N1 = binvar(3,1,nv);    N2 = binvar(3,1,nv);    N3 = binvar(3,1);    N4 = binvar
 p_a = sdpvar(1);
 p_z = sdpvar(1);
 
-constraints = [-0.8 <= diff([p_a a{:}]) <= 1];
+constraints = -0.8 <= diff([p_a a{:}]) <= 1;
 constraints = [constraints, -1 <= diff([p_z z{:}]) <= 1];
 objective   = 0;
-i=1;
+
 %-----creacion de funcion objetivo y restricciones--------------------
 for k = 1:N
  objective = objective+(v{k}-Vd)'*Q*(v{k}-Vd) + (z{k}-Zd)'*R*(z{k}-Zd); % calculate obj
   
   % Feasible region
-    constraints = [constraints ,1<=    z{k}     <= L,
+    constraints = [constraints,1 <=    z{k}     <= L,
                                1 <=    z_2      <= L,%tome valores posibles
                                1 <=    z_3      <= L,%tome valores posibles
                                1 <=    z_4      <= L,%tome valores posibles
@@ -106,23 +106,23 @@ for k = 1:N
 % ------------------------------------vehiculo 2-------------------------------    
 %------------------si dz=0  -------------------->>>    dij>= Ds----------------
 
-    constraints = [constraints, -10000  <=  dis12{k+1} <= 100000,
+    constraints = [constraints, -10000  <=  dis12{k+1} <= 100000,...
                                   mmin  <= z_2-z{k+1}  <= Mmax];
     constraints = [constraints, dis12{k+1} == dis12{k}+T*(v_2-v{k})];
 %.........................alpha...............................
-constraints = [constraints, [D1(1,1,i)+D1(2,1,i)+D1(3,1,i)==1], 
+constraints = [constraints, [D1(1,1,i)+D1(2,1,i)+D1(3,1,i)==1],... 
               implies( D1(1,1,i), [ a1==0, z_2-z{k} <=-0.1 ]);
               implies( D1(2,1,i), [ a1==1, -0.1<=z_2-z{k} <=0.1 ]);
               implies( D1(3,1,i), [ a1==0, 0.1 <= z_2-z{k} ]) ];
 %.........................Beta...............................
-constraints = [constraints, [sum(B1,1,i)==1], 
+constraints = [constraints, [sum(B1,1,i)==1],... 
               implies(B1(1,1,i),[ b1==1, dis12{1} >=0 ]);
               implies(B1(2,1,i),[ b1==0, dis12{1} <=0 ]) ];
           
 constraints = [constraints, [dis12{1}<=100000]]; 
 
 % %.........................Gamma...............................
-constraints = [constraints, [G1(1,1,i)+G1(2,1,i)+G1(3,1,i)==1], 
+constraints = [constraints, [G1(1,1,i)+G1(2,1,i)+G1(3,1,i)==1],... 
               implies( G1(1,1,i), [ g1==0, z_2-z{k+1} <=-0.1 ]);
               implies( G1(2,1,i), [ g1==1, -0.1<=z_2-z{k+1} <=0.1 ]);
               implies( G1(3,1,i), [ g1==0, 0.1 <= z_2-z{k+1} ]) ];   
@@ -130,7 +130,7 @@ constraints = [constraints, [G1(1,1,i)+G1(2,1,i)+G1(3,1,i)==1],
 constraints = [constraints, [1<=z{k+1}<=L]];           
 
 % %.........................Lateral distance...............................
-constraints = [constraints, [sum(Z1,1,i)==1], 
+constraints = [constraints, [sum(Z1,1,i)==1],... 
               implies( Z1(1,1,i), [ z1==0,       z_2-p_z <= -1.1 ]);
               implies( Z1(2,1,i), [ z1==1, -1.1<=z_2-p_z <= -0.9 ]);
               implies( Z1(3,1,i), [ z1==0, -0.9<=z_2-p_z <= 0.9 ]);
