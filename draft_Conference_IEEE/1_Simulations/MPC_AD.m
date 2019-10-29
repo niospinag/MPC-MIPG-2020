@@ -100,9 +100,11 @@ for k = 1:N
                          z{k}-[1]<=    z{k+1}   <=z{k}+[1],
                            -A_max<=    a{k}     <= A_max];%paso de un carril
                              
+    constraints = [constraints, -1 <= diff([z{k+1} z{k}]) <= 1];
+    
     constraints = [constraints, v{k+1} == v{k}+T*a{k}];%velocidad futura
   
-    for i=1:nv
+   
 % ------------------------------------vehiculo 2-------------------------------    
 %------------------si dz=0  -------------------->>>    dij>= Ds----------------
 
@@ -242,7 +244,7 @@ constraints = [constraints, Ss3*(Nn3)*(z{k}-p_z)==0];
 
     % It is EXTREMELY important to add as many
     % constraints as possible to the binary variables
-    end
+    
 end
 objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); % calculate obj
 %% solver definition   
@@ -260,14 +262,14 @@ solutions_out = {[a{:}], [z{:}], [v{:}], [a1],  [b1], [g1], [z1], [n1]...
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','gurobi'),parameters_in,solutions_out);
 %------condiciones iniciales----------
-vel=[15; 20; 10; 25];% velociodad inicial
-zel=[5; 2; 1; 3]; %carril inicial
+vel=[20; 20; 10; 25];% velociodad inicial
+zel=[5; 4; 3; 2]; %carril inicial
 zel2=[zel(2); zel(1); zel(3); zel(4)]; %carril inicial
 zel3=[zel(3); zel(1); zel(2); zel(4)]; %carril inicial
 zel4=[zel(4); zel(1); zel(2); zel(3)]; %carril inicial
 % zel5=[zel(5); zel(1); zel(2); zel(3); zel(4)]; %carril inicial
 Vdes=[15; 25; 35; 5]; %velocidad deseada
-Zdes=[2; 3; 5; 1];
+Zdes=[1; 2; 3; 4];
 %---distancia inicial de cada agente
 % disij= Zj-zi
 d1i = [10; 0; 20];
@@ -333,7 +335,10 @@ for i = 1:30
 % solutions_out = {[a{:}], [z{:}], [v{:}], [a1],  [b1], [g1], [z1], [n1]...
 %                                          [a2],  [b2], [g2], [z2], [n2]...
 %                                          [a3],  [b3], [g3], [z3], [n3]};
-    inputs = {Vdes(1),Zdes(1),vel(1),past_a(1),zel(1),...
+
+%.........................solver vehiculo 1............................
+
+        inputs = {Vdes(1),Zdes(1),vel(1),past_a(1),zel(1),...
                         vel(2),zel(2),d1i(1),alogic1_1,blogic1_1,G1logic_1,S1logic_1,N1logic_1,...
                         vel(3),zel(3),d1i(2),alogic2_1,blogic2_1,G2logic_1,S2logic_1,N2logic_1,...
                         vel(4),zel(4),d1i(3),alogic3_1,blogic3_1,G3logic_1,S3logic_1,N3logic_1};
@@ -381,6 +386,9 @@ for i = 1:30
         error('you are close, keep trying 1');
     end   
     
+
+
+
 %.........................solver vehiculo 2............................
 inputs2 = {Vdes(2),Zdes(2),vel(2),past_a(2),zel(2),...
                         vel(1),zel(1),d2i(1),alogic1_2,blogic1_2,G1logic_2,S1logic_2,N1logic_2,...
@@ -407,12 +415,12 @@ inputs2 = {Vdes(2),Zdes(2),vel(2),past_a(2),zel(2),...
     Z2 = solutions2{12};  z2hist=[z2hist Z2];   S2logic_2=Z2(:,1);
     N2 = solutions2{13};  n2hist=[n2hist N2];   N2logic_2=N2(:,1); 
    
-    A3 = solutions1{14};                          alogic3_2=A3(:,1);
+    A3 = solutions2{14};                          alogic3_2=A3(:,1);
 %     g3 = solutions1{17};  %g1hist=[g1hist g1];
-    B3 = solutions1{15};  b3hist=[b3hist B3];     blogic3_2=B3(:,1);
-    Gg3 = solutions1{16}; g3hist=[g3hist Gg3];    G3logic_2=Gg3(:,1);
-    Z3 = solutions1{17};  z3hist=[z3hist Z3];     S3logic_2=Z3(:,1);
-    N3 = solutions1{18};  n3hist=[n3hist N3];     N3logic_2=N3(:,1);
+    B3 = solutions2{15};  b3hist=[b3hist B3];     blogic3_2=B3(:,1);
+    Gg3 = solutions2{16}; g3hist=[g3hist Gg3];    G3logic_2=Gg3(:,1);
+    Z3 = solutions2{17};  z3hist=[z3hist Z3];     S3logic_2=Z3(:,1);
+    N3 = solutions2{18};  n3hist=[n3hist N3];     N3logic_2=N3(:,1);
 %     A2hist =[A2hist A2];    
 %     d2i = d2i+T*(vel(2:(2+1))-ones(2,1)*vel(1));
    
@@ -445,11 +453,11 @@ inputs3 = {Vdes(3),Zdes(3),vel(3),past_a(3),zel(3),...
     Z2 = solutions3{12};    z2hist=[z2hist Z2];     S2logic_3=Z2(:,1);
     N2 = solutions3{13};    n2hist=[n2hist N2];     N2logic_3=N2(:,1); 
    
-    A3 = solutions1{14};                            alogic3_3=A3(:,1);
-    B3 = solutions1{15};    b3hist=[b3hist B3];     blogic3_3=B3(:,1);
-    Gg3 = solutions1{16};   g3hist=[g3hist Gg3];    G3logic_3=Gg3(:,1);
-    Z3 = solutions1{17};    z3hist_3=[z3hist_3 Z3]; S3logic_3=Z3(:,1);
-    N3 = solutions1{18};    n3hist_3=[n3hist_3 N3]; N3logic_3=N3(:,1);
+    A3 = solutions3{14};                            alogic3_3=A3(:,1);
+    B3 = solutions3{15};    b3hist=[b3hist B3];     blogic3_3=B3(:,1);
+    Gg3 = solutions3{16};   g3hist=[g3hist Gg3];    G3logic_3=Gg3(:,1);
+    Z3 = solutions3{17};    z3hist_3=[z3hist_3 Z3]; S3logic_3=Z3(:,1);
+    N3 = solutions3{18};    n3hist_3=[n3hist_3 N3]; N3logic_3=N3(:,1);
 %     A2hist =[A2hist A2];    
 if i==4;
     s1logic_3=1;
@@ -462,6 +470,13 @@ rastreon=[rastreon N1];
     if diagnostics3 == 1
         error('you are close, keep trying 3');
     end  
+    
+    
+
+    
+    
+    
+    
     
     
     %------------------graficas--------------------
