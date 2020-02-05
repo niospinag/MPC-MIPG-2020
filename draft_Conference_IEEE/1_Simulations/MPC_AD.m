@@ -10,8 +10,8 @@ clc
 
 % addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\matlab\x64_win64'))%cplex
 % addpath(genpath('C:\Program Files\IBM\ILOG\CPLEX_Studio_Community129\cplex\examples\src\matlab'))%cplex
-addpath(genpath('C:\Users\Personal\Desktop\potential games\YALMIP-master'))
-addpath('C:\gurobi811\win64\matlab') %Gurobi
+% addpath(genpath('C:\Users\Personal\Desktop\potential games\YALMIP-master'))
+% addpath('C:\gurobi811\win64\matlab') %Gurobi
 
 % %---------laptop tavo
 %linux
@@ -21,9 +21,9 @@ addpath('C:\gurobi811\win64\matlab') %Gurobi
 %  addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
 % yalmip('clear')
 
-addpath(genpath('/home/tavocardona/gurobi811/linux64'))%gurobi
+addpath(genpath('/opt/gurobi900/linux64'))%gurobi
 % addpath(genpath('/opt/ibm/ILOG/CPLEX_Studio_Community129/cplex/matlab/x86-64_linux'))%cplex
- addpath(genpath('/home/tavocardona/Documents/YALMIP-master/YALMIP-master'))%yalmip
+ addpath(genpath('/home/tavocardona/Documents/YALMIP-master'))%yalmip
 yalmip('clear')
 
 
@@ -40,7 +40,7 @@ nv=1; %numero de vehiculos sin el agente no cooperativo
 % MPC data
 Q = eye(nv);
 R = eye(nv);
-N = 8;%horizon
+N = 10;%horizon
 T = 0.5; %[s]
 Ds=3;%Safety distance
 Dl=15; %lateral distance
@@ -50,6 +50,7 @@ L=6;%number of lanes
 Mmax=L-1;
 mmin=-L+1;
 e=1;
+i=1;
 % Vd = 12;
 % Zd = 1;
 %------------estados deseados-----------
@@ -296,14 +297,14 @@ solutions_out = {[a{:}], [z{:}], [v{:}], [a1],  [b1], [g1], [z1], [n1]...
 
 controller1 = optimizer(constraints, objective,sdpsettings('solver','gurobi'),parameters_in,solutions_out);
 %------condiciones iniciales----------
-vel=[25; 15; 10; 20];% velociodad inicial
-zel=[2; 4; 3; 5]; %carril inicial
+vel=[20; 25; 10; 20];% velociodad inicial
+zel=[2; 4; 1; 5]; %carril inicial
 zel2=[zel(2); zel(1); zel(3); zel(4)]; %carril inicial
 zel3=[zel(3); zel(1); zel(2); zel(4)]; %carril inicial
 zel4=[zel(4); zel(1); zel(2); zel(3)]; %carril inicial
 % zel5=[zel(5); zel(1); zel(2); zel(3); zel(4)]; %carril inicial
-Vdes=[15; 25; 35; 15]; %velocidad deseada
-Zdes=[4; 2; 3; 4];
+Vdes=[10; 35; 35; 15]; %velocidad deseada
+Zdes=[5; 2; 3; 4];
 %---distancia inicial de cada agente
 % disij= Zj-zi
 d1i = [20; 0; 20];
