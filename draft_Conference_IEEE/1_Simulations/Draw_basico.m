@@ -128,7 +128,7 @@ hold on;
     ylabel('$y$-position (m)','interpreter','latex','FontSize',fontsize_labels)
     xlabel('$x$-position (m)','interpreter','latex','FontSize',fontsize_labels)
     axis([-0.2 400 -0.2 6])%Axis description
-    pause(0.1)
+    pause(0.3)
     box on;
     grid on
     %aviobj = addframe(aviobj,gcf);
