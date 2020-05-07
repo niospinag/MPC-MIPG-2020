@@ -282,25 +282,11 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
 
 
 
-%% initial condition
-
-%------condiciones iniciales----------
-vel= [10; 0; 30; 20];% velociodad inicial
-Vdes=[60; 50; 50; 20]; %velocidad deseada
-
-zel= [2; 3; 4; 5]; %carril inicial
-Zdes=[4; 1; 5; 4]; %carril deseado
-
-acel=[0 0 0 0]';
-%---distancia inicial de cada agente
-d1i = [80 60 50]';
-% d1i = [10 0 30]';
-d2i = [-d1i(1); -d1i(1)+d1i(2)];
-% d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3)];
-
+%% Building variables
 
 %define las condiciones iniciales que deben tener las variables
 %logicas
+
 
  %.....................vehiculo 1..........................
  
@@ -340,49 +326,61 @@ d2i = [-d1i(1); -d1i(1)+d1i(2)];
  S1logic_4=[ones(1,N)]; 
  N1logic_4=[ones(1,N)];   
  
+ %..................... vehiculo 5 ..........................
+ 
+ alogic1_5=[zeros(1,N)]; 
+ blogic1_5=[ones(1,N)];  
+ G1logic_5=[ones(1,N)];     
+ S1logic_5=[ones(1,N)]; 
+ N1logic_5=[ones(1,N)];   
+ 
+ alogic2_5=[zeros(1,N)]; 
+ blogic2_5=[ones(1,N)];  
+ G2logic_5=[ones(1,N)];     
+ S2logic_5=[ones(1,N)]; 
+ N2logic_5=[ones(1,N)];   
  
  
+
+ 
+
+% ..........historial de las predicciones 
+ vp1hist=[];  
+ zp1hist=[];   
+
+ vp2hist=[];  
+ zp2hist=[];   
+ 
+ vp3hist=[];  
+ zp3hist=[];   
+
+ vp4hist=[];  
+ zp4hist=[];   
+ 
+ vp5hist=[];  
+ zp5hist=[];   
+ 
+ 
+%------condiciones iniciales----------
+vel= [10; 0; 30; 20; 30];% velociodad inicial
+Vdes=[60; 50; 50; 20; 30]; %velocidad deseada
+
+zel= [2; 3; 4; 5; 5]; %carril inicial
+Zdes=[4; 1; 3; 4; 5]; %carril deseado
+
+acel=[0 0 0 0 0]';
+%---distancia inicial de cada agente
+d1i = [80 60 50 150]';
+% d1i = [10 0 30]';
+d2i = [-d1i(1); -d1i(1)+d1i(2)];
+% d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3)];
+
 % hold on
 vhist = vel;
 zhist = zel;
 ahist = acel;
 dhist = d1i;
 
- % ...historial variables logicas
- a1hist_1=[];
- b1hist_1=[];    
- g1hist_1=[];   
- n1hist_1=[];  
- 
- a1hist_2=[];
- b1hist_2=[];    
- g1hist_2=[];   
- n1hist_2=[];  
- 
-  
- a1hist_3=[];    a2hist_3=[];   
- b1hist_3=[];    b2hist_3=[];    
- g1hist_3=[];    g2hist_3=[];   
- n1hist_3=[];    n2hist_3=[];   
- 
- 
-
-% ..........historial de las predicciones 
- vp1hist=[];  
- zp1hist=[];   
- s1hist_1=[]; 
- 
- vp2hist=[];  
- zp2hist=[];   
- s1hist_2=[];
- 
- vp3hist=[];  
- zp3hist=[];   
- s1hist_3=[];    s2hist_3=[];
- 
- vp4hist=[];  
- zp4hist=[];   
- s1hist_4=[]; 
  
 p_optima = ( Vdes(1)-Vdes(1) )'*Q*( Vdes(1)-Vdes(1) ) + (Zdes(1) - Zdes(1))'*R*(Zdes(1) - Zdes(1));
 epsilon = 10^(-12);
@@ -391,7 +389,8 @@ i=0;
 
  time=20;
  tic
-% for i = 1 : time
+ 
+% for ii = 1 : 30
 while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > epsilon
  i=i+1;
 %.........................      solver vehiculo 1       ............................
@@ -493,6 +492,30 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
     
     
     
+    %.........................      solver vehiculo 5       ............................
+
+        inputs = {Vdes(5) , Zdes(5) , vel(5) , zel(5) , ...
+                   vel(3) , zel(3)  , [d1i(2)-d1i(4)] , alogic1_5 , blogic1_5  , S1logic_5 , N1logic_5...
+                   vel(4) , zel(4)  , [d1i(3)-d1i(4)] , alogic2_5 , blogic2_5  , S2logic_5 , N2logic_5}; %G1logic_1
+    [solutions5,diagnostics] = controller2{inputs};    
+     
+    A = solutions5{1};      acel(5) = A(:,1);
+    Z = solutions5{2};      zel(5)=Z(:,2);                    zp5hist=[zp5hist; Z];
+    V = solutions5{3};      vp5hist = [vp5hist; V];
+    
+    Aa1 = solutions5{4};        alogic1_5 = Aa1;
+    B1  = solutions5{5};        blogic1_5 = B1;
+    S1  = solutions5{6};        S1logic_5 = [S1(2:N) 1];
+    Nn1 = solutions5{7};        N1logic_5 = Nn1;
+    
+    Aa2 = solutions5{8};        alogic2_5 = Aa2;
+    B2 = solutions5{9};         blogic2_5 = B2;
+    S2 = solutions5{10};        S2logic_5 = [S2(2:N) 1];
+    Nn2 = solutions5{11};       N2logic_5 = Nn2;
+ 
+    if diagnostics == 1
+        error('you are close, keep trying 5');
+    end
     
     
     
@@ -512,8 +535,8 @@ end
 toc
 
 
-vphist=cat(3, vp1hist , vp2hist, vp3hist, vp4hist);
-zphist=cat(3, zp1hist , zp2hist, zp3hist, zp4hist);
+vphist=cat(3, vp1hist , vp2hist, vp3hist, vp4hist, vp5hist);
+zphist=cat(3, zp1hist , zp2hist, zp3hist, zp4hist, zp5hist);
 
 % Draw_basico(vhist,zhist,...                     
 %                             vp1hist,zp1hist,...
