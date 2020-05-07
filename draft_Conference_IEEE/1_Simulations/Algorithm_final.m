@@ -168,7 +168,8 @@ for k = 1:N
 
   % Feasible region
     constraints = [constraints,1 <=    z{k+1}     <= L,
-                               1 <=    z_2      <= L,       %tome valores posibles
+                               1 <=    z_2      <= L,   
+                               1 <=    z_3      <= L,   %tome valores posibles
                                 0<=    v{k+1}   <= V_max,   %no exceda las velocidades 
                          z{k}-[1]<=    z{k+1}   <=z{k}+[1], %paso de un carril
                            -A_max<=    a{k}     <= A_max];
@@ -218,7 +219,48 @@ constraints = [constraints, sum(N1{k})==1,
  
           
 constraints = [constraints, Ss1(k)*(Nn1(k))*(z{k+1}-z{k})==0];
-%................................................................................
+
+
+
+% --------------------------------------- vehiculo 3 -------------------------------    
+% ------------------ si dz=0  -------------------->>>    dij >= Ds -----------------
+
+    constraints = [constraints, -100000  <=  dis13{k+1} <= 100000,...
+                                   mmin  <= z_3-z{k+1}  <= Mmax];
+    constraints = [constraints, dis13{k+1} == dis13{k} + T*(v_2-v{k})];
+    constraints = [constraints, [dis13{1} <= 100000]]; 
+%.........................alpha...............................
+
+constraints = [constraints, [D2{k}(1)+D2{k}(2)+D2{k}(3)==1],... 
+              implies( D2{k}(1), [  z_3-z{k} <=-0.1 ,       a2{k}==0   ]);
+              implies( D2{k}(2), [  -0.1<= z_3-z{k} <=0.1,  a2{k}==1   ]);
+              implies( D2{k}(3), [  0.1 <= z_3-z{k},        a2{k}==0   ]) ];
+          
+%................................... Beta ....................................
+constraints = [constraints, [sum(B2{k})==1],... 
+              implies(B2{k}(1),[ dis13{k} >=0,     b2{k}==1]);
+              implies(B2{k}(2),[ dis13{k} <=0,     b2{k}==0]) ];
+
+          
+constraints = [constraints,  Aa2(k)*( Bb2(k) *(Ds - dis13{k+1}) + (1-Bb2(k)) * (Ds + dis13{k+1})) <= 0 ];
+
+% %.........................Lateral distance...............................
+
+constraints = [constraints, [sum(S2{k})==1], 
+              implies( S2{k}(1), [ s2{k} == 0,        z_3-z{k} <= -1.1 ]  );
+              implies( S2{k}(2), [ s2{k} == 1,        z_3-z{k} == -1 ]  );
+              implies( S2{k}(3), [ s2{k} == 0,   -0.9 <= z_3-z{k} <= 0.9 ]  );
+              implies( S2{k}(4), [ s2{k} == 1,         z_3-z{k} == 1 ]  );
+              implies( S2{k}(5), [ s2{k} == 0,    1.1 <= z_3-z{k} ]) ]  ;   
+
+%.........................lateral safety distance...............................
+constraints = [constraints, sum(N2{k})==1, 
+              implies( N2{k}(1), [        dis13{1} <= -Dl ,     n2{k}==0 ] );
+              implies( N2{k}(2), [  -Dl<= dis13{1} <= Dl,       n2{k}==1 ] );
+              implies( N2{k}(3), [   Dl<= dis13{1}  ,           n2{k}==0 ] ) ];   
+ 
+          
+constraints = [constraints, Ss2(k)*(Nn2(k))*(z{k+1}-z{k})==0];
 
 
     % It is EXTREMELY important to add as many
@@ -229,13 +271,13 @@ end
 %% solver definition  3 node
 
 parameters_in = { Vd , Zd , v{1} , p_z , ...
-                            v_2 , z_2 , dis12{1} , Aa1 , Bb1 , Ss1 , Nn1};%, Gg1
-                         
-                            
-solutions_out = {[a{:}], [z{:}], [v{:}], [a1{:}],  [b1{:}] ,  [s1{:}], [n1{:}] };%[g1{:}],
-%                                          [a4], [dis15{:}], [b4], [g4], [z4], [n4]};
+                            v_2 , z_2 , dis12{1} , Aa1 , Bb1 , Ss1 , Nn1...
+                            v_3 , z_3 , dis13{1} , Aa2 , Bb2 , Ss2 , Nn2};
 
-controller1 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),parameters_in,solutions_out);
+solutions_out = {[a{:}], [z{:}], [v{:}], [a1{:}],  [b1{:}] ,  [s1{:}], [n1{:}],...
+                                         [a2{:}],  [b2{:}] ,  [s2{:}], [n2{:}] };
+
+controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),parameters_in,solutions_out);
 
 
 
@@ -243,15 +285,19 @@ controller1 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
 %% initial condition
 
 %------condiciones iniciales----------
-vel= [10; 0; 10];% velociodad inicial
-Vdes=[60; 50; 10]; %velocidad deseada
+vel= [10; 0; 30; 20];% velociodad inicial
+Vdes=[60; 50; 50; 20]; %velocidad deseada
 
-zel= [2; 3; 5]; %carril inicial
-Zdes=[4; 2; 5]; %carril deseado
+zel= [2; 3; 4; 5]; %carril inicial
+Zdes=[4; 1; 5; 4]; %carril deseado
 
+acel=[0 0 0 0]';
 %---distancia inicial de cada agente
-d1i = [10; 0];
-acel=[0 0 0]';
+d1i = [80 60 50]';
+% d1i = [10 0 30]';
+d2i = [-d1i(1); -d1i(1)+d1i(2)];
+% d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3)];
+
 
 %define las condiciones iniciales que deben tener las variables
 %logicas
@@ -272,6 +318,30 @@ acel=[0 0 0]';
  S1logic_2=[ones(1,N)]; 
  N1logic_2=[ones(1,N)];   
  
+ %..................... vehiculo 3 ..........................
+ 
+ alogic1_3=[zeros(1,N)]; 
+ blogic1_3=[ones(1,N)];  
+ G1logic_3=[ones(1,N)];     
+ S1logic_3=[ones(1,N)]; 
+ N1logic_3=[ones(1,N)];   
+ 
+ alogic2_3=[zeros(1,N)]; 
+ blogic2_3=[ones(1,N)];  
+ G2logic_3=[ones(1,N)];     
+ S2logic_3=[ones(1,N)]; 
+ N2logic_3=[ones(1,N)];   
+ 
+  %..................... vehiculo 4 ..........................
+ 
+ alogic1_4=[zeros(1,N)]; 
+ blogic1_4=[ones(1,N)];  
+ G1logic_4=[ones(1,N)];     
+ S1logic_4=[ones(1,N)]; 
+ N1logic_4=[ones(1,N)];   
+ 
+ 
+ 
 % hold on
 vhist = vel;
 zhist = zel;
@@ -289,6 +359,12 @@ dhist = d1i;
  g1hist_2=[];   
  n1hist_2=[];  
  
+  
+ a1hist_3=[];    a2hist_3=[];   
+ b1hist_3=[];    b2hist_3=[];    
+ g1hist_3=[];    g2hist_3=[];   
+ n1hist_3=[];    n2hist_3=[];   
+ 
  
 
 % ..........historial de las predicciones 
@@ -299,6 +375,14 @@ dhist = d1i;
  vp2hist=[];  
  zp2hist=[];   
  s1hist_2=[];
+ 
+ vp3hist=[];  
+ zp3hist=[];   
+ s1hist_3=[];    s2hist_3=[];
+ 
+ vp4hist=[];  
+ zp4hist=[];   
+ s1hist_4=[]; 
  
 p_optima = ( Vdes(1)-Vdes(1) )'*Q*( Vdes(1)-Vdes(1) ) + (Zdes(1) - Zdes(1))'*R*(Zdes(1) - Zdes(1));
 epsilon = 10^(-12);
@@ -314,39 +398,37 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
 
 
         inputs = {Vdes(1) , Zdes(1) , vel(1) , zel(1) , ...
-                   vel(2) , zel(2)  , d1i(1) , alogic1_1 , blogic1_1  , S1logic_1 , N1logic_1}; %G1logic_1
+                   vel(2) , zel(2)  , d1i(1) , alogic1_1 , blogic1_1  , S1logic_1 , N1logic_1}; 
     [solutions1,diagnostics] = controller1{inputs};    
      
-    A = solutions1{1};      acel(1) = A(:,1);
-    Z = solutions1{2};      zel(1)=Z(:,2);                  zp1hist=[zp1hist; Z];
-    V = solutions1{3};      vp1hist = [vp1hist; V];
-    Aa = solutions1{4};     a1hist_1 = [a1hist_1; Aa];      alogic1_1 = Aa;
-    B = solutions1{5};      b1hist_1 = [b1hist_1; B];       blogic1_1 = B;
-    S = solutions1{6};      s1hist_1 = [s1hist_1; S];       S1logic_1 = [S(2:N) 1];
-    Nn = solutions1{7};     n1hist_1 = [n1hist_1; Nn];      N1logic_1 = Nn;
+    A =  solutions1{1};         acel(1) = A(:,1);
+    Z =  solutions1{2};         zel(1)=Z(:,2);                  zp1hist=[zp1hist; Z];
+    V =  solutions1{3};         vp1hist = [vp1hist; V];
+    Aa = solutions1{4};         alogic1_1 = Aa;
+    B =  solutions1{5};         blogic1_1 = B;
+    S =  solutions1{6};         S1logic_1 = [S(2:N) 1];
+    Nn = solutions1{7};         N1logic_1 = Nn;
 
 %     Gg1 = solutions1{6};    g1hist_1=[g1hist_1 Gg1];        G1logic_1=Gg1;
 
     if diagnostics == 1
         error('you are close, keep trying 1');
     end   
-% end
-% 
-%  
-% while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > epsilon  
+
+    
 %.........................      solver vehiculo 2       ............................
 
         inputs = {Vdes(2) , Zdes(2) , vel(2) , zel(2) , ...
                    vel(1) , zel(1)  , -d1i(1) , alogic1_2 , blogic1_2  , S1logic_2 , N1logic_2}; %G1logic_1
-    [solutions1,diagnostics] = controller1{inputs};    
+    [solutions2,diagnostics] = controller1{inputs};    
      
-    A = solutions1{1};      acel(2) = A(:,1);
-    Z = solutions1{2};      zel(2)=Z(:,2);                  zp2hist=[zp2hist; Z];
-    V = solutions1{3};      vp2hist = [vp2hist; V];
-    Aa = solutions1{4};     a1hist_2 = [a1hist_2; Aa];      alogic1_2 = Aa;
-    B = solutions1{5};      b1hist_2 = [b1hist_2; B];       blogic1_2 = B;
-    S = solutions1{6};      s1hist_2 = [s1hist_2; S];       S1logic_2 = [S(2:N) 1];
-    Nn = solutions1{7};     n1hist_2 = [n1hist_2; Nn];      N1logic_2 = Nn;
+    A = solutions2{1};      acel(2) = A(:,1);
+    Z = solutions2{2};      zel(2)=Z(:,2);                  zp2hist=[zp2hist; Z];
+    V = solutions2{3};      vp2hist =  [vp2hist; V];        
+    Aa = solutions2{4};     alogic1_2 = Aa;
+    B = solutions2{5};      blogic1_2 = B;
+    S = solutions2{6};      S1logic_2 = [S(2:N) 1];
+    Nn = solutions2{7};     N1logic_2 = Nn;
  
 %     Gg1 = solutions1{6};    g1hist_1=[g1hist_1 Gg1];        G1logic_1=Gg1;
 
@@ -355,13 +437,68 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
     end
     
     
+    %.........................      solver vehiculo 3       ............................
+
+        inputs = {Vdes(3) , Zdes(3) , vel(3) , zel(3) , ...
+                   vel(1) , zel(1)  , d2i(1) , alogic1_3 , blogic1_3  , S1logic_3 , N1logic_3...
+                   vel(2) , zel(2)  , d2i(2) , alogic2_3 , blogic2_3  , S2logic_3 , N2logic_3}; %G1logic_1
+    [solutions3,diagnostics] = controller2{inputs};    
+     
+    A = solutions3{1};      acel(3) = A(:,1);
+    Z = solutions3{2};      zel(3)=Z(:,2);                    zp3hist=[zp3hist; Z];
+    V = solutions3{3};      vp3hist = [vp3hist; V];
+    
+    Aa1 = solutions3{4};        alogic1_3 = Aa1;
+    B1  = solutions3{5};        blogic1_3 = B1;
+    S1  = solutions3{6};        S1logic_3 = [S1(2:N) 1];
+    Nn1 = solutions3{7};        N1logic_3 = Nn1;
+    
+    Aa2 = solutions3{8};        alogic2_3 = Aa2;
+    B2 = solutions3{9};         blogic2_3 = B2;
+    S2 = solutions3{10};        S2logic_3 = [S2(2:N) 1];
+    Nn2 = solutions3{11};       N2logic_3 = Nn2;
+ 
+    if diagnostics == 1
+        error('you are close, keep trying 3');
+    end
+    
+    
+      %.........................      solver vehiculo 4       ............................
+
+%     parameters_in = { Vd , Zd , v{1} , p_z , ...
+%                             v_2 , z_2 , dis12{1} , Aa1 , Bb1 , Ss1 , Nn1...
+%                             v_3 , z_3 , dis13{1} , Aa2 , Bb2 , Ss2 , Nn2};
+ 
+% solutions_out = {[a{:}], [z{:}], [v{:}], [a1{:}],  [b1{:}] ,  [s1{:}], [n1{:}],...
+%                                          [a2{:}],  [b2{:}] ,  [s2{:}], [n2{:}] };
+%     
+        inputs = {Vdes(4) , Zdes(4) , vel(4) , zel(4) , ...
+                   vel(2) , zel(2)  , [-d1i(3)+d1i(1)] , alogic1_4 , blogic1_4  , S1logic_4 , N1logic_4}; 
+    [solutions4,diagnostics] = controller1{inputs};    
+     
+    A = solutions4{1};      acel(4) = A(:,1);
+    Z = solutions4{2};      zel(4)=Z(:,2);                    zp4hist=[zp4hist; Z];
+    V = solutions4{3};      vp4hist = [vp4hist; V];
+    
+    Aa1 = solutions4{4};        alogic1_4 = Aa1;
+    B1  = solutions4{5};        blogic1_4 = B1;
+    S1  = solutions4{6};        S1logic_4 = [S1(2:N) 1];
+    Nn1 = solutions4{7};        N1logic_4 = Nn1;
+    
+ 
+    if diagnostics == 1
+        error('you are close, keep trying 4');
+    end
+    
+    
+    
     
     
     
     
 
-    d1i = d1i+T*(vel(2:( size(vel,1) ))-ones((size(vel,1)-1),1)*vel(1));
-%     d2i = [-d1i(1); -d1i(1)+d1i(2); -d1i(1)+d1i(3)];
+    d1i = d1i + T*(vel(2:( size(vel,1) )) - ones((size(vel,1)-1),1)*vel(1));
+    d2i = [-d1i(1); -d1i(1)+d1i(2)];
     
     vel = vel+T*acel;
     vhist = [vhist vel];
@@ -373,17 +510,17 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
 
 end
 toc
-% vp2hist = [vel(2)*ones(i+2,N+1)];
-% zp2hist = [zel(2)*ones(i+2,N+1)];
-vp3hist = [vel(3)*ones(i,N+1)];
-zp3hist = [zel(3)*ones(i,N+1)];
 
-vphist=cat(3, vp1hist , vp2hist, vp3hist);
-zphist=cat(3, zp1hist , zp2hist, zp3hist);
 
-Draw_basico(vhist,zhist,...                     
-                            vp1hist,zp1hist,...
-                            vp2hist,zp2hist,...
-                            vp3hist,zp3hist,...
-                                                 dhist,T,N)
+vphist=cat(3, vp1hist , vp2hist, vp3hist, vp4hist);
+zphist=cat(3, zp1hist , zp2hist, zp3hist, zp4hist);
+
+% Draw_basico(vhist,zhist,...                     
+%                             vp1hist,zp1hist,...
+%                             vp2hist,zp2hist,...
+%                             vp3hist,zp3hist,...
+%                                                  dhist,T,N)
+
+
+Draw_object(vhist,zhist,vphist,zphist,dhist,T)
 

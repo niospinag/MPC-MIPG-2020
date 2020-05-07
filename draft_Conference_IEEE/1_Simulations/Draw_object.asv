@@ -5,8 +5,8 @@ function Draw_object(vhist,zhist,vphist,zphist,dhist,T)
 %                                                 dhist,T,N)
 %        Draw_MIPG(vhist,vp1hist,zhist,zp1hist,dhist,T,N)
 
-N = size(vphist,2)-1;
-V = size(vphist,3);
+N = size(vphist,2)-1;%Horizonte de prediccion
+V = size(vphist,3);%numero de vehiculos
 
 vp1hist = [];
 
@@ -24,8 +24,8 @@ an = 10; alt=0.5; % parametros carroceria
 rob_diam=1.5;
 r = rob_diam/2;  % robot radius
 ang=0:0.005:2*pi;
-xp=an*cos(ang);
-yp=alt*sin(ang);
+x_circle=an*cos(ang);
+y_circle=alt*sin(ang);
 % 
 % r = obs_diam/2;  % obstacle radius
 % xp_obs=r*cos(ang);
@@ -47,7 +47,7 @@ zph_4=ones(81,size(vp1hist,2))*zhist(4);
 % xp_2(k+1,:)=xp_2(k,:)+T*15;
 % end
 % filename = '2c_1obs.gif';% <---------------------------------------------------------------------------------------------------------------
-xp=zeros(1,size(vphist,3),3);
+xp=zeros(1,size(vphist,3)+1,V);
 
 xp_2(1,1)=[dhist(1)];
 xp_3(1,1)=[dhist(2)];
@@ -102,7 +102,8 @@ for k = 1:size(vhist,2)
 plot_car(an,alt,x(1,k),y(1),0,'b')%Plot the car
 plot_car(an,alt,x(2,k),y(2),0,'r')%Plot the car
 plot_car(an,alt,x(3,k),y(3),0,'g')%Plot the car
-% 
+plot_car(an,alt,x(4,k),y(3),0,'c')%Plot the car
+ 
 % plot_car(an,alt,x_2(k),y_2(k),0,'r')%Plot the car
 % plot_car(an,alt,x_3(k),y_3(k),0,'g')%Plot the car
 
@@ -113,23 +114,33 @@ hold on;
 
 %-----------Plot trajectories------------    
 %------------agente 1------------
-    plot(x(1,k),y(k),'-r','linewidth',line_width);hold on % plot exhibited trajectory
+    plot(x(1,k,1),y(2),'-r','linewidth',line_width);hold on % plot exhibited trajectory
     if k < size(vhist,2) % plot prediction
-        plot(xp_1(k,1:N),zphist(k,1:N,1),'b--*')
+        plot(xp(k,:,1),zphist(k,:,1),'b--*')
     end
-    plot(x_1(k)+xp,y_1(k)+yp,'--r')% plot robot circle
+    plot(x(1,k,1)+x_circle,y(1)+y_circle,'--r')% plot robot circle
 %------------agente 2------------
-    plot(x_2(k),y_2(k),'-r','linewidth',line_width);hold on % plot exhibited trajectory
+    plot(x(1,k,2),y(2),'-r','linewidth',line_width);hold on % plot exhibited trajectory
     if k < size(vhist,2) % plot prediction
-        plot(xp_2(k,1:N),zp2hist(k,1:N),'r--*')
+        plot(xp(k,:,2),zphist(k,:,2),'r--*')
     end
-    plot(x_2(k)+xp,y_2(k)+yp,'--r')% plot robot circle
+    plot(x(k,1,2)+x_circle,y(2)+y_circle,'--r')% plot robot circle
 %------------agente 3------------
-    plot(x_3(k),y_3(k),'-r','linewidth',line_width);hold on % plot exhibited trajectory
+    plot(x(1,k,3),y(3),'-r','linewidth',line_width);hold on % plot exhibited trajectory
     if k < size(vhist,2) % plot prediction
-        plot(xp_3(k,1:N),zp3hist(k,1:N),'g--*')
+        plot(xp(k,:,3),zphist(k,:,3),'g--*')
     end
-    plot(x_3(k)+xp,y_3(k)+yp,'--r')% plot robot circle
+    plot(x(k,1,3)+x_circle,y(3)+y_circle,'--r')% plot robot circle
+    
+%------------agente 3------------
+    plot(x(1,k,4),y(4),'-r','linewidth',line_width);hold on % plot exhibited trajectory
+    if k < size(vhist,2) % plot prediction
+        plot(xp(k,:,4),zphist(k,:,4),'m--*')
+    end
+    plot(x(k,1,4)+x_circle,y(4)+y_circle,'--r')% plot robot circle
+    
+    
+    
     
     
    hold off
