@@ -39,6 +39,8 @@ Mmax=L-1;
 mmin=-L+1;
 % Vd = 12;
 % Zd = 1;
+p_max=0.3;
+
 
 %------------estados deseados-----------
  Zd = sdpvar(1,1);%carril deseado
@@ -91,7 +93,7 @@ for k = 1:N
     constraints = [constraints,1 <=    z{k+1}     <= L,
                                1 <=    z_2      <= L,       %tome valores posibles
                                 0<=    v{k+1}   <= V_max,   %no exceda las velocidades 
-                         z{k}-[1]<=    z{k+1}   <=z{k}+[1], %paso de un carril
+                         z{k}-[p_max]<=    z{k+1}   <=z{k}+[p_max], %paso de un carril
                            -A_max<=    a{k}     <= A_max];
     
     constraints = [constraints, [1 <= z{1}    <=   L   ]];
@@ -158,7 +160,7 @@ solutions_out = {[a{:}], [z{:}], [v{:}], [a1{:}],  [b1{:}] ,  [s1{:}], [n1{:}] }
 
 controller1 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),parameters_in,solutions_out);
 
-%% making the optimizer with 3 node
+%% making the optimizer with 2 node
 constraints = [];
 constraints = [constraints,  diff([p_z z{1}]) == 0];
 objective   = 0;
@@ -171,7 +173,7 @@ for k = 1:N
                                1 <=    z_2      <= L,   
                                1 <=    z_3      <= L,   %tome valores posibles
                                 0<=    v{k+1}   <= V_max,   %no exceda las velocidades 
-                         z{k}-[1]<=    z{k+1}   <=z{k}+[1], %paso de un carril
+                         z{k}-[p_max]<=    z{k+1}   <=z{k}+[p_max], %paso de un carril
                            -A_max<=    a{k}     <= A_max];
     
     constraints = [constraints, [1 <= z{1}    <=   L   ]];
@@ -362,15 +364,19 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
  
  
 %------condiciones iniciales----------
-vel= [10; 0; 30; 20; 30];% velociodad inicial
-Vdes=[60; 50; 50; 20; 30]; %velocidad deseada
+vel= [20; 20; 20; 20; 20];% velociodad inicial
+Vdes=[60; 60; 60; 20; 10]; %velocidad deseada
 
-zel= [2; 3; 4; 5; 5]; %carril inicial
-Zdes=[4; 1; 3; 4; 5]; %carril deseado
+zel= [5; 4; 3; 3; 2]; %carril inicial
+Zdes=[1; 1; 1; 1; 1]; %carril deseado
+% zel= [1; 2; 3; 3; 2]; %carril inicial
+% Zdes=[4; 4; 4; 2; 1]; %carril deseado
+% zel= [2; 3; 4; 5; 5]; %carril inicial
+% Zdes=[4; 1; 3; 4; 5]; %carril deseado
 
 acel=[0 0 0 0 0]';
 %---distancia inicial de cada agente
-d1i = [80 60 50 150]';
+d1i = [-20 -40 -80 -100]';
 % d1i = [10 0 30]';
 d2i = [-d1i(1); -d1i(1)+d1i(2)];
 % d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3)];
@@ -413,6 +419,10 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
     if diagnostics == 1
         error('you are close, keep trying 1');
     end   
+    
+    if Q*( vel(1)-Vdes(1) )^2 + R*(zel(1) - Zdes(1))^2 < epsilon
+        disp("x_1=x_1*")
+    end
 
     
 %.........................      solver vehiculo 2       ............................
@@ -433,6 +443,10 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
 
     if diagnostics == 1
         error('you are close, keep trying 2');
+    end
+    
+    if Q*( vel(2)-Vdes(2) )^2 + R*(zel(2) - Zdes(2))^2 < epsilon
+        disp("x_2=x_2*")
     end
     
     
@@ -461,16 +475,12 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
         error('you are close, keep trying 3');
     end
     
+    if Q*( vel(3)-Vdes(3) )^2 + R*(zel(3) - Zdes(3))^2 < epsilon
+        disp("x_3=x_3*")
+    end
     
       %.........................      solver vehiculo 4       ............................
-
-%     parameters_in = { Vd , Zd , v{1} , p_z , ...
-%                             v_2 , z_2 , dis12{1} , Aa1 , Bb1 , Ss1 , Nn1...
-%                             v_3 , z_3 , dis13{1} , Aa2 , Bb2 , Ss2 , Nn2};
- 
-% solutions_out = {[a{:}], [z{:}], [v{:}], [a1{:}],  [b1{:}] ,  [s1{:}], [n1{:}],...
-%                                          [a2{:}],  [b2{:}] ,  [s2{:}], [n2{:}] };
-%     
+     
         inputs = {Vdes(4) , Zdes(4) , vel(4) , zel(4) , ...
                    vel(2) , zel(2)  , [-d1i(3)+d1i(1)] , alogic1_4 , blogic1_4  , S1logic_4 , N1logic_4}; 
     [solutions4,diagnostics] = controller1{inputs};    
@@ -489,7 +499,9 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
         error('you are close, keep trying 4');
     end
     
-    
+    if Q*( vel(4)-Vdes(4) )^2 + R*(zel(4) - Zdes(4))^2 < epsilon
+        disp("x_4=x_4*")
+    end
     
     
     %.........................      solver vehiculo 5       ............................
@@ -517,8 +529,11 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
         error('you are close, keep trying 5');
     end
     
+    if Q*( vel(5)-Vdes(5) )^2 + R*(zel(5) - Zdes(5))^2 < epsilon
+        disp("x_5=x_5*")
+    end
     
-    
+    %----------------------------------------------------------------------
 
     d1i = d1i + T*(vel(2:( size(vel,1) )) - ones((size(vel,1)-1),1)*vel(1));
     d2i = [-d1i(1); -d1i(1)+d1i(2)];
@@ -530,10 +545,12 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
     dhist = [dhist d1i];
 
 %     pause(0.05)   
+disp("-------")
 
 end
 toc
 
+disp("it's done")
 
 vphist=cat(3, vp1hist , vp2hist, vp3hist, vp4hist, vp5hist);
 zphist=cat(3, zp1hist , zp2hist, zp3hist, zp4hist, zp5hist);

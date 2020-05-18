@@ -28,9 +28,9 @@ figure(500)%create a window named "500"
 % Animate the robot motion
 set(gcf,'PaperPositionMode','auto')
 set(gcf, 'Color', 'w');
-set(gcf,'Units','normalized','OuterPosition',[0 0 1 0.5]);%tamaño del grafico
+set(gcf,'Units','normalized','OuterPosition',[0 0 1 0.5]);%tamaño del grafico en pantalla
 
-% filename = '2c_1obs.gif';% <---------------------------------------------------------------------------------------------------------------
+
 xp=zeros(1,size(vphist,3)+1,V);
 
 
@@ -55,6 +55,8 @@ x=zeros(V,size(vhist,2));
 for n=2:V
     x(1,1,n)=dhist(n-1);
 end
+
+
 
 %  dibujo dinamico
 for k = 1:size(vhist,2)
@@ -112,14 +114,14 @@ hold on;
     plot(x(1,k,5)+x_circle,y(5)+y_circle,'--m')% plot robot circle
     
     
-    
+ filename = 'MPC2.gif';% <---------------------------------------------------------------------------------------------------------------
     
     
    hold off
     %figure(500)
     ylabel('$y$-position (m)','interpreter','latex','FontSize',fontsize_labels)
     xlabel('$x$-position (m)','interpreter','latex','FontSize',fontsize_labels)
-    axis([-0.2 400 -0.2 6])%Axis description
+    axis([-100 300 -0.2 6])%descripcion de los ejes
     pause(0.3)
     box on;
     grid on
@@ -130,16 +132,16 @@ hold on;
     
     
     %---------------------make gift--------------------------
-% frame = getframe(figure(500)); 
-%       im = frame2im(frame); 
-%       [imind,cm] = rgb2ind(im,256); 
-%       % Write to the GIF File 
-%       if k == 1 
-%           imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
-%       else 
-%           imwrite(imind,cm,filename,'gif','WriteMode','append'); 
-%       end 
-% 
+frame = getframe(figure(500)); 
+      im = frame2im(frame); 
+      [imind,cm] = rgb2ind(im,256); 
+      % Write to the GIF File 
+      if k == 1 
+          imwrite(imind,cm,filename,'gif', 'Loopcount',inf); 
+      else 
+          imwrite(imind,cm,filename,'gif','WriteMode','append'); 
+      end 
+
 %     
     
 end
