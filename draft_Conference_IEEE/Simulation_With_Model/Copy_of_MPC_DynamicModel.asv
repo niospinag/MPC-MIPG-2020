@@ -27,7 +27,7 @@ iz = 1; %Inertia coefficient
 Q = 10*eye(3);
 Q(3,3) = 1;
 R = 10*eye(2);
-N = 2;%horizon
+N = 5;%horizon
 t = 0.5; %[s]
 Ds=15;%Safety distance
 Dl=15; %lateral distance safe
@@ -75,24 +75,23 @@ for k = 1:N
   % Feasible region
     constraints = [constraints,1 <=    p{k+1}(2)     <= L, % it keep on the way
                                 0<=    v{k+1}        <= V_max,
+                              -pi<=    angle{k}      <= pi,
+                              -pi<=    angle{k+1}    <= pi,
                 p{k}(2) - [p_max]<=    p{k+1}(2)     <= p{k}(2) + [p_max], %paso de un carril
                            -T_max<=    tf{k}         <= T_max,
                            -T_max<=    tr{k}         <= T_max];
     
-    constraints = [constraints,[1 <=   p{k}(2)    <= L ]]; % it keep on the way
-
-
-    
-%     vehicle dynamic
-    constraints = [constraints, v{k+1}(2) == v{k}(2) - t*ang{k}(2) - t*v{k}(1) + (2/m)*tf{k}(2)*t + (2/m)*tr{k}(2)*t] ;%dynamic model
-    constraints = [constraints, v{k+1}(1) == v{k}(1) + t*ang{k}(2) - t*v{k}(2) + (2/m)*tf{k}(1)*t + (2/m)*tr{k}(1)*t] ;
-    constraints = [constraints, ang{k+1}(1) == ang{k}(1) + t*ang{k}(2)];  %angular position
-    constraints = [constraints, ang{k+1}(2) == ang{k}(2) + (2*lf/iz)*t*tf{k}(2) + (2*lr/iz)*t*tr{k}(2) ];  %angular velocity
-    constraints = [constraints, p{k+1}(2) == t*cos(ang{k}(1))*v{k}(2) + t*sin(ang{k}(1))*v{k}(1) + ang{k}(1)*v{k}(1)*cos(ang{k}(1))*t - ang{k}(1)*v{k}(2)*sin(ang{k}(1))*t + p{k}(2)];
-    constraints = [constraints, p{k+1}(1) == - t*sin(ang{k}(1))*v{k}(1) - t*cos(ang{k}(1))*v{k}(1) - ang{k}(1)*v{k}(1)*sin(ang{k}(1))*t - ang{k}(1)*v{k}(2)*cos(ang{k}(1))*t + p{k}(1)];             
-
-    % It is EXTREMELY important to add as many
-    % constraints as possible to the binary variables
+    constraints = [constraints,[1 <=  p{k}(2)  <= L ]]; % it keep on the way
+     
+     %Vehicle Dynamic
+     constraints = [constraints, v{k+1}(2) == v{k}(2) - t*ang{k}(2)*v{k}(1) - t*v{k}(1)*ang{k}(2) + (2/m)*tf{k}(2)*t + (2/m)*tr{k}(2)*t] ;
+     constraints = [constraints, v{k+1}(1) == v{k}(1) + t*ang{k}(2)*v{k}(2) + t*v{k}(2)*ang{k}(2) + (2/m)*tf{k}(1)*t + (2/m)*tf{k}(1)*t] ;
+     constraints = [constraints, ang{k+1}(1) == ang{k}(1) + t*ang{k}(2)];
+     constraints = [constraints, ang{k+1}(2) == ang{k}(2) + (2*lf/iz)*t*tf{k}(2) - (2*lr/iz)*t*tr{k}(2)];
+     constraints = [constraints,  p{k+1}(2) == t*cos(ang{k}(1))*v{k}(2) + t*sin(ang{k}(1))*v{k}(1) + angle(1)*v{k}(1)*cos(ang{k}(1))*t - ang{k}(1)*v{k}(2)*sin(ang{k}(1))*t +  p{k}(2)];
+     constraints = [constraints,  p{k+1}(1) == -t*sin(ang{k}(1))*v{k}(2) - t*cos(ang{k}(1))*v{k}(1) - angle(1)*v{k}(1)*sin(ang{k}(1))*t - ang{k}(1)*v{k}(2)*cos(ang{k}(1))*t +  p{k}(1)];
+     % It is EXTREMELY important to add as many
+     % constraints as possible to the binary variables
 end
 
 
@@ -189,7 +188,7 @@ for ii = 1 : 30
     end
     
     
-    vel = vel+t*acel;
+%     vel = vel+t*acel;
     vhist = [vhist vel];
     zhist = [zhist zel];
     ahist = [ahist acel];
