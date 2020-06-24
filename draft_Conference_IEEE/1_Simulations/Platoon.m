@@ -285,9 +285,7 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
 
 %% Building variables
 
-%define las condiciones iniciales que deben tener las variables
-%logicas
-
+%define las condiciones iniciales que deben tener las variables logicas
 
  %.....................vehiculo 1..........................
  
@@ -297,7 +295,12 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
  S1logic_1=[ones(1,N)]; 
  N1logic_1=[ones(1,N)];   
 
- %..................... vehiculo 2 ..........................
+ alogic2_1=[zeros(1,N)]; 
+ blogic2_1=[ones(1,N)];  
+ G2logic_1=[ones(1,N)];     
+ S2logic_1=[ones(1,N)]; 
+ N2logic_1=[ones(1,N)];   
+ %..................... vehiculo 2 ........................
  
  alogic1_2=[zeros(1,N)]; 
  blogic1_2=[ones(1,N)];  
@@ -305,7 +308,12 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
  S1logic_2=[ones(1,N)]; 
  N1logic_2=[ones(1,N)];   
  
- %..................... vehiculo 3 ..........................
+ alogic2_2=[zeros(1,N)]; 
+ blogic2_2=[ones(1,N)];  
+ G2logic_2=[ones(1,N)];     
+ S2logic_2=[ones(1,N)]; 
+ N2logic_2=[ones(1,N)];   
+ %..................... vehiculo 3 ........................
  
  alogic1_3=[zeros(1,N)]; 
  blogic1_3=[ones(1,N)];  
@@ -319,7 +327,7 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
  S2logic_3=[ones(1,N)]; 
  N2logic_3=[ones(1,N)];   
  
-  %..................... vehiculo 4 ..........................
+  %..................... vehiculo 4 ........................
  
  alogic1_4=[zeros(1,N)]; 
  blogic1_4=[ones(1,N)];  
@@ -327,7 +335,12 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
  S1logic_4=[ones(1,N)]; 
  N1logic_4=[ones(1,N)];   
  
- %..................... vehiculo 5 ..........................
+ alogic2_4=[zeros(1,N)]; 
+ blogic2_4=[ones(1,N)];  
+ G2logic_4=[ones(1,N)];     
+ S2logic_4=[ones(1,N)]; 
+ N2logic_4=[ones(1,N)];   
+ %..................... vehiculo 5 ........................
  
  alogic1_5=[zeros(1,N)]; 
  blogic1_5=[ones(1,N)];  
@@ -340,42 +353,22 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
  G2logic_5=[ones(1,N)];     
  S2logic_5=[ones(1,N)]; 
  N2logic_5=[ones(1,N)];   
- 
- 
-
- 
 
 % ..........historial de las predicciones 
- vp1hist=[];  
- zp1hist=[];   
+ vp1hist=[];   vp2hist=[];   vp3hist=[];  vp4hist=[];  vp5hist=[]; 
+ zp1hist=[];   zp2hist=[];   zp3hist=[];  zp4hist=[];  zp5hist=[];   
 
- vp2hist=[];  
- zp2hist=[];   
- 
- vp3hist=[];  
- zp3hist=[];   
-
- vp4hist=[];  
- zp4hist=[];   
- 
- vp5hist=[];  
- zp5hist=[];   
- 
- 
 %------condiciones iniciales----------
 vel= [20; 20; 20; 20; 20];% velociodad inicial
-Vdes=[30; 60; 60; 20; 10]; %velocidad deseada
+Vdes=[30; 80; 80; 80; 70]; %velocidad deseada
 
-zel= [3; 4; 3; 3; 2]; %carril inicial
-Zdes=[3; 3; 3; 3; 4]; %carril deseado
+zel= [3; 4; 3; 3; 2];   %carril inicial
+Zdes=[3; 3; 3; 3; 4];   %carril deseado
+acel=[0 0 0 0 0]';      %aceleracion inicial
 
-
-acel=[0 0 0 0 0]';
 %---distancia inicial de cada agente
 d1i = [-20 -40 -60 -80]';
-% d1i = [10 0 30]';
 d2i = [-d1i(1); -d1i(1)+d1i(2)];
-% d3i = [-d1i(2); -d1i(2)+d1i(1); -d1i(2)+d1i(3)];
 
 % hold on
 vhist = vel;
@@ -388,6 +381,7 @@ p_optima = ( Vdes(1)-Vdes(1) )'*Q*( Vdes(1)-Vdes(1) ) + (Zdes(1) - Zdes(1))'*R*(
 epsilon = 10^(-12);
  
 i=0;
+sim_tim = 10; % Maximum simulation time
 
  time=20;
  tic
@@ -397,10 +391,10 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
  i=i+1;
 %.........................      solver vehiculo 1       ............................
 
-
-        inputs = {Vdes(1) , Zdes(1) , vel(1) , zel(1) , ...
-                   vel(2) , zel(2)  , d1i(1) , alogic1_1 , blogic1_1  , S1logic_1 , N1logic_1}; 
-    [solutions1,diagnostics] = controller1{inputs};    
+        inputs = {Vdes(1), Zdes(1), vel(1), zel(1), ...
+                  vel(2), zel(2), d1i(1), alogic1_1  blogic1_1, S1logic_1, N1logic_1,...
+                  vel(3), zel(3), d1i(2), alogic2_1, blogic2_1, S2logic_1, N2logic_1}; 
+    [solutions1,diagnostics] = controller2{inputs};    
      
     A =  solutions1{1};         acel(1) = A(:,1);
     Z =  solutions1{2};         zel(1)=Z(:,2);                  zp1hist=[zp1hist; Z];
@@ -410,20 +404,22 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
     S =  solutions1{6};         S1logic_1 = [S(2:N) 1];
     Nn = solutions1{7};         N1logic_1 = Nn;
 
-%     Gg1 = solutions1{6};    g1hist_1=[g1hist_1 Gg1];        G1logic_1=Gg1;
+    Aa2 = solutions1{8};        alogic2_1 = Aa2;
+    B2 = solutions1{9};         blogic2_1 = B2;
+    S2 = solutions1{10};        S2logic_1 = [S2(2:N) 1];
+    Nn2 = solutions1{11};       N2logic_1 = Nn2;
 
     if diagnostics == 1
         error('you are close, keep trying 1');
     end   
-    
 
 
-    
 %.........................      solver vehiculo 2       ............................
 
         inputs = {Vdes(2) , Zdes(2) , vel(2) , zel(2) , ...
-                   vel(1) , zel(1)  , -d1i(1) , alogic1_2 , blogic1_2  , S1logic_2 , N1logic_2}; %G1logic_1
-    [solutions2,diagnostics] = controller1{inputs};    
+                   vel(1) , zel(1)  , -d1i(1) , alogic1_2 , blogic1_2  , S1logic_2 , N1logic_2...
+                   vel(3) , zel(3)  , (-d1i(1)+d1i(2)) , alogic2_2 , blogic2_2  , S2logic_2 , N2logic_2}; 
+    [solutions2,diagnostics] = controller2{inputs};    
      
     A = solutions2{1};      acel(2) = A(:,1);
     Z = solutions2{2};      zel(2)=Z(:,2);                  zp2hist=[zp2hist; Z];
@@ -433,26 +429,26 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
     S = solutions2{6};      S1logic_2 = [S(2:N) 1];
     Nn = solutions2{7};     N1logic_2 = Nn;
  
-%     Gg1 = solutions1{6};    g1hist_1=[g1hist_1 Gg1];        G1logic_1=Gg1;
-
+    Aa2 = solutions2{8};    alogic2_2 = Aa2;
+    B2 = solutions2{9};     blogic2_2 = B2;
+    S2 = solutions2{10};    S2logic_2 = [S2(2:N) 1];
+    Nn2 = solutions2{11};   N2logic_2 = Nn2;
+    
     if diagnostics == 1
         error('you are close, keep trying 2');
     end
-    
-
     
     
     %.........................      solver vehiculo 3       ............................
 
         inputs = {Vdes(3) , Zdes(3) , vel(3) , zel(3) , ...
                    vel(1) , zel(1)  , d2i(1) , alogic1_3 , blogic1_3  , S1logic_3 , N1logic_3...
-                   vel(2) , zel(2)  , d2i(2) , alogic2_3 , blogic2_3  , S2logic_3 , N2logic_3}; %G1logic_1
+                   vel(2) , zel(2)  , d2i(2) , alogic2_3 , blogic2_3  , S2logic_3 , N2logic_3};
     [solutions3,diagnostics] = controller2{inputs};    
      
     A = solutions3{1};      acel(3) = A(:,1);
     Z = solutions3{2};      zel(3)=Z(:,2);                    zp3hist=[zp3hist; Z];
     V = solutions3{3};      vp3hist = [vp3hist; V];
-    
     Aa1 = solutions3{4};        alogic1_3 = Aa1;
     B1  = solutions3{5};        blogic1_3 = B1;
     S1  = solutions3{6};        S1logic_3 = [S1(2:N) 1];
@@ -471,18 +467,22 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
       %.........................      solver vehiculo 4       ............................
      
         inputs = {Vdes(4) , Zdes(4) , vel(4) , zel(4) , ...
-                   vel(2) , zel(2)  , [-d1i(3)+d1i(1)] , alogic1_4 , blogic1_4  , S1logic_4 , N1logic_4}; 
-    [solutions4,diagnostics] = controller1{inputs};    
+                   vel(2) , zel(2)  , (-d1i(3)+d1i(1)) , alogic1_4 , blogic1_4  , S1logic_4 , N1logic_4...
+                   vel(3) , zel(3)  , (-d1i(3)+d1i(2)) , alogic2_4 , blogic2_4  , S2logic_4 , N2logic_4}; 
+    [solutions4,diagnostics] = controller2{inputs};    
      
     A = solutions4{1};      acel(4) = A(:,1);
     Z = solutions4{2};      zel(4)=Z(:,2);                    zp4hist=[zp4hist; Z];
     V = solutions4{3};      vp4hist = [vp4hist; V];
-    
     Aa1 = solutions4{4};        alogic1_4 = Aa1;
     B1  = solutions4{5};        blogic1_4 = B1;
     S1  = solutions4{6};        S1logic_4 = [S1(2:N) 1];
     Nn1 = solutions4{7};        N1logic_4 = Nn1;
     
+    Aa2 = solutions4{8};        alogic2_4 = Aa2;
+    B2 = solutions4{9};         blogic2_4 = B2;
+    S2 = solutions4{10};        S2logic_4 = [S2(2:N) 1];
+    Nn2 = solutions4{11};       N2logic_4 = Nn2;
  
     if diagnostics == 1
         error('you are close, keep trying 4');
@@ -500,7 +500,6 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
     A = solutions5{1};      acel(5) = A(:,1);
     Z = solutions5{2};      zel(5)=Z(:,2);                    zp5hist=[zp5hist; Z];
     V = solutions5{3};      vp5hist = [vp5hist; V];
-    
     Aa1 = solutions5{4};        alogic1_5 = Aa1;
     B1  = solutions5{5};        blogic1_5 = B1;
     S1  = solutions5{6};        S1logic_5 = [S1(2:N) 1];
