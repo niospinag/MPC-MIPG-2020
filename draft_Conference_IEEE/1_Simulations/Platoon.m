@@ -21,8 +21,6 @@ clc
 yalmip('clear')
 %% PROGRAM
 % Model data
-nx = 1; % Number of agents
-nu = 1; % Number of inputs
 nv=1; %numero de vehiculos sin el agente no cooperativo
 % MPC data
 Q = 5*eye(1);   %weight matrix V
@@ -36,8 +34,6 @@ A_max=50;
 L=6;%number of lanes
 Mmax=L-1;
 mmin=-L+1;
-% Vd = 12;
-% Zd = 1;
 p_max=1;
 delay_time = 0.3;
 % 0.3
@@ -89,10 +85,8 @@ objective   = 0;
 constraints = [constraints, [1 <= z{1}        <= L]];
 constraints = [constraints,  1 <=    z_2      <= L];
 constraints = [constraints,  1 <=    z_3      <= L];  
-% constraints = [constraints,  1 <=    z_obs      <= L];  
 constraints = [constraints, [dis12{1} <= 1000]]; 
 constraints = [constraints, [dis13{1} <= 1000]]; 
-% constraints = [constraints, [dis_obs{1} <= 1000]];
 
 for k = 1:N
  objective = objective+( v{k+1}-Vd )'*Q*( v{k+1}-Vd ) + (z{k+1} - Zd)'*R*(z{k+1} - Zd); % calculate obj
@@ -171,7 +165,7 @@ constraints = [constraints, [sum(B2{k})==1],...
           
 constraints = [constraints,  Aa2(k)*( Bb2(k) *(Ds - dis13{k+1}) + (1-Bb2(k)) * (Ds + dis13{k+1})) <= 0 ];
 
-% %.........................Lateral distance...............................
+%.............................Lateral distance..................................
 
 constraints = [constraints, [sum(S2{k})==1], 
               implies( S2{k}(1), [ s2{k} == 0,        z_3-z{k} <= -1.1 ]  );
@@ -185,14 +179,12 @@ constraints = [constraints, sum(N2{k})==1,
               implies( N2{k}(1), [        dis13{1} <= -Dl ,     n2{k}==0 ] );
               implies( N2{k}(2), [  -Dl<= dis13{1} <= Dl,       n2{k}==1 ] );
               implies( N2{k}(3), [   Dl<= dis13{1}  ,           n2{k}==0 ] ) ];   
- 
-          
-constraints = [constraints, Ss2(k)*(Nn2(k))*(z{k+1}-z{k})==0];
 
+constraints = [constraints, Ss2(k)*(Nn2(k))*(z{k+1}-z{k})==0];
 
     % It is EXTREMELY important to add as many
     % constraints as possible to the binary variables
-    
+
 end
 
 objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); % calculate obj
@@ -214,11 +206,176 @@ constraints = [constraints, [1 <=   z{1}    <=   L   ]];
 constraints = [constraints,  1 <=    z_2      <= L];
 constraints = [constraints,  1 <=    z_3      <= L];  
 constraints = [constraints,  1 <=    z_4      <= L];  
-% constraints = [constraints,  1 <=    z_obs      <= L];  
 constraints = [constraints, [dis12{1} <= 1000]]; 
 constraints = [constraints, [dis13{1} <= 1000]]; 
 constraints = [constraints, [dis14{1} <= 1000]]; 
-% constraints = [constraints, [dis_obs{1} <= 1000]];
+
+for k = 1:N
+ objective = objective+( v{k+1}-Vd )'*Q*( v{k+1}-Vd ) + (z{k+1} - Zd)'*R*(z{k+1} - Zd); % calculate obj
+
+  % Feasible region
+    constraints = [constraints,1 <=    z{k+1}     <= L,  %tome valores posibles
+                                0<=    v{k+1}   <= V_max,   %no exceda las velocidades 
+                         z{k}-[p_max]<=    z{k+1}   <=z{k}+[p_max], %paso de un carril
+                           -A_max<=    a{k}     <= A_max];
+
+    constraints = [constraints, -1 <= [z{k+1} - z{k}] <= 1];
+    constraints = [constraints, v{k+1} == v{k} + T*a{k}];             %velocidad futura
+
+% ---------------------------------------vehiculo 2-------------------------------    
+% ------------------ si dz=0  -------------------->>>    dij >= Ds----------------
+
+    constraints = [constraints, -1000  <=  dis12{k+1} <= 1000];
+%     constraints = [constraints,   mmin  <= z_2-z{k+1}  <= Mmax];
+    constraints = [constraints, dis12{k+1} == dis12{k} + T*(v_2-v{k})];
+
+%.........................alpha...............................
+
+constraints = [constraints, [D1{k}(1)+D1{k}(2)+D1{k}(3)==1],... 
+              implies( D1{k}(1), [  z_2-z{k} <=-0.01 ,        a1{k}==0   ]);
+              implies( D1{k}(2), [  -0.01<= z_2-z{k} <=0.01,  a1{k}==1   ]);
+              implies( D1{k}(3), [  0.01 <= z_2-z{k},         a1{k}==0   ]) ];
+          
+%................................... Beta ....................................
+constraints = [constraints, [sum(B1{k})==1],... 
+              implies(B1{k}(1),[ dis12{k} >=0,     b1{k}==1]);
+              implies(B1{k}(2),[ dis12{k} <=0,     b1{k}==0]) ];
+          
+constraints = [constraints,  Aa1(k)*( Bb1(k) *(Ds - dis12{k+1}) + (1 - Bb1(k)) * (Ds + dis12{k+1})) <= 0 ];
+
+% %.........................Lateral distance...............................
+
+constraints = [constraints, [sum(S1{k})==1], 
+              implies( S1{k}(1), [ s1{k} == 0,        z_2-z{k} <= -1.001 ]  );
+              implies( S1{k}(2), [ s1{k} == 1,        z_2-z{k} == -1 ]  );
+              implies( S1{k}(3), [ s1{k} == 0,   -0.999 <= z_2-z{k} <= 0.999 ]  );
+              implies( S1{k}(4), [ s1{k} == 1,         z_2-z{k} == 1 ]  );
+              implies( S1{k}(5), [ s1{k} == 0,      1.001 <= z_2-z{k} ]) ]  ;   
+
+%.........................lateral safety distance...............................
+
+constraints = [constraints, sum(N1{k})==1, 
+              implies( N1{k}(1), [        dis12{1} <= -Dl ,     n1{k}==0 ] );
+              implies( N1{k}(2), [  -Dl<= dis12{1} <= Dl,       n1{k}==1 ] );
+              implies( N1{k}(3), [   Dl<= dis12{1}  ,           n1{k}==0 ] ) ];   
+ 
+constraints = [constraints, Ss1(k)*(Nn1(k))*(z{k+1} - z{k})==0];
+
+% --------------------------------------- vehiculo 3 -------------------------------    
+% ------------------ si dz=0  -------------------->>>    dij >= Ds -----------------
+
+    constraints = [constraints, -1000  <=  dis13{k+1} <= 1000];
+%     constraints = [constraints,    mmin  <= z_3 - z{k+1}  <= Mmax];
+    constraints = [constraints, dis13{k+1} == dis13{k} + T*(v_3-v{k})];
+
+%.........................alpha...............................
+
+constraints = [constraints, [D2{k}(1)+D2{k}(2)+D2{k}(3)==1],... 
+              implies( D2{k}(1), [  z_3-z{k} <=-0.01 ,       a2{k}==0   ]);
+              implies( D2{k}(2), [  -0.01<= z_3-z{k} <=0.01,  a2{k}==1   ]);
+              implies( D2{k}(3), [  0.01 <= z_3-z{k},        a2{k}==0   ]) ];
+
+%................................... Beta ....................................
+
+constraints = [constraints, [sum(B2{k})==1],... 
+              implies(B2{k}(1),[ dis13{k} >=0,     b2{k}==1]);
+              implies(B2{k}(2),[ dis13{k} <=0,     b2{k}==0])];
+
+constraints = [constraints,  Aa2(k)*( Bb2(k) *(Ds - dis13{k+1}) + (1-Bb2(k)) * (Ds + dis13{k+1})) <= 0 ];
+
+%..............................Lateral distance...............................
+
+constraints = [constraints, [sum(S2{k})==1], 
+              implies( S2{k}(1), [ s2{k} == 0,        z_3-z{k} <= -1.1 ]  );
+              implies( S2{k}(2), [ s2{k} == 1,        z_3-z{k} == -1 ]  );
+              implies( S2{k}(3), [ s2{k} == 0,   -0.999 <= z_3-z{k} <= 0.999 ]  );
+              implies( S2{k}(4), [ s2{k} == 1,         z_3-z{k} == 1 ]  );
+              implies( S2{k}(5), [ s2{k} == 0,    1.001 <= z_3-z{k} ]) ]  ;   
+
+%.........................lateral safety distance...............................
+constraints = [constraints, sum(N2{k})==1, 
+              implies( N2{k}(1), [        dis13{1} <= -Dl ,     n2{k}==0 ] );
+              implies( N2{k}(2), [  -Dl<= dis13{1} <= Dl,       n2{k}==1 ] );
+              implies( N2{k}(3), [   Dl<= dis13{1}  ,           n2{k}==0 ] ) ];   
+ 
+          
+constraints = [constraints, Ss2(k)*(Nn2(k))*(z{k+1}-z{k})==0];
+
+
+% ---------------------------------------vehiculo 4-------------------------------    
+% ------------------ si dz=0  -------------------->>>    dij >= Ds----------------
+
+    constraints = [constraints, -1000  <=  dis14{k+1} <= 1000];
+%     constraints = [constraints,   mmin  <= z_4-z{k+1}  <= Mmax];
+    constraints = [constraints, dis14{k+1} == dis14{k} + T*(v_4-v{k})];
+
+%.........................alpha...............................
+
+constraints = [constraints, [D3{k}(1)+D3{k}(2)+D3{k}(3)==1],... 
+              implies( D3{k}(1), [  z_4-z{k} <=-0.01 ,        a3{k}==0   ]);
+              implies( D3{k}(2), [  -0.01<= z_4-z{k} <=0.01,  a3{k}==1   ]);
+              implies( D3{k}(3), [  0.01 <= z_4-z{k},         a3{k}==0   ]) ];
+          
+%................................... Beta ....................................
+constraints = [constraints, [sum(B3{k})==1],... 
+              implies(B3{k}(1),[ dis14{k} >=0,     b3{k}==1]);
+              implies(B3{k}(2),[ dis14{k} <=0,     b3{k}==0])];
+
+          
+constraints = [constraints,  Aa3(k)*( Bb3(k) *(Ds - dis14{k+1}) + (1 - Bb3(k)) * (Ds + dis14{k+1})) <= 0 ];
+
+%.........................Lateral distance...............................
+
+constraints = [constraints, [sum(S3{k})==1], 
+              implies( S3{k}(1), [ s3{k} == 0,        z_4-z{k} <= -1.001 ]  );
+              implies( S3{k}(2), [ s3{k} == 1,        z_4-z{k} == -1 ]  );
+              implies( S3{k}(3), [ s3{k} == 0,   -0.999 <= z_4-z{k} <= 0.999 ]  );
+              implies( S3{k}(4), [ s3{k} == 1,         z_4-z{k} == 1 ]  );
+              implies( S3{k}(5), [ s3{k} == 0,      1.001 <= z_4-z{k} ]) ]  ;   
+
+%.........................lateral safety distance...............................
+constraints = [constraints, sum(N3{k})==1, 
+              implies( N3{k}(1), [        dis14{1} <= -Dl ,     n3{k}==0 ] );
+              implies( N3{k}(2), [  -Dl<= dis14{1} <= Dl,       n3{k}==1 ] );
+              implies( N3{k}(3), [   Dl<= dis14{1}  ,           n3{k}==0 ] ) ];   
+ 
+          
+constraints = [constraints, Ss3(k)*(Nn3(k))*(z{k+1} - z{k})==0];
+
+
+
+
+    % It is EXTREMELY important to add as many
+    % constraints as possible to the binary variables
+    
+end
+
+objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); % calculate obj
+
+parameters_in = { Vd, Zd, v{1}, p_z, ...
+    v_2, z_2, dis12{1}, Aa1, Bb1, Ss1, Nn1, ...
+    v_3, z_3, dis13{1}, Aa2, Bb2, Ss2, Nn2, ...
+    v_4, z_4, dis14{1}, Aa3, Bb3, Ss3, Nn3};
+
+solutions_out = {[a{:}], [z{:}], [v{:}], [a1{:}],  [b1{:}] ,  [s1{:}], [n1{:}],...
+    [a2{:}],  [b2{:}] ,  [s2{:}], [n2{:}],...
+    [a3{:}],  [b3{:}] ,  [s3{:}], [n3{:}]};
+
+controller3 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),parameters_in,solutions_out);
+
+%% making the optimizer with 3 node and obstacle
+constraints = [];
+objective   = 0;
+constraints = [constraints,  diff([p_z z{1}]) == 0];
+constraints = [constraints, [1 <=   z{1}    <=   L   ]];
+constraints = [constraints,  1 <=    z_2      <= L];
+constraints = [constraints,  1 <=    z_3      <= L];  
+constraints = [constraints,  1 <=    z_4      <= L];  
+constraints = [constraints,  1 <=    z_obs      <= L];  
+constraints = [constraints, [dis12{1} <= 1000]]; 
+constraints = [constraints, [dis13{1} <= 1000]]; 
+constraints = [constraints, [dis14{1} <= 1000]]; 
+constraints = [constraints, [dis_obs{1} <= 1000]];
 
 for k = 1:N
  objective = objective+( v{k+1}-Vd )'*Q*( v{k+1}-Vd ) + (z{k+1} - Zd)'*R*(z{k+1} - Zd); % calculate obj
@@ -247,13 +404,12 @@ constraints = [constraints, [D1{k}(1)+D1{k}(2)+D1{k}(3)==1],...
               implies( D1{k}(1), [  z_2-z{k} <=-0.01 ,        a1{k}==0   ]);
               implies( D1{k}(2), [  -0.01<= z_2-z{k} <=0.01,  a1{k}==1   ]);
               implies( D1{k}(3), [  0.01 <= z_2-z{k},         a1{k}==0   ]) ];
-          
+
 %................................... Beta ....................................
 constraints = [constraints, [sum(B1{k})==1],... 
               implies(B1{k}(1),[ dis12{k} >=0,     b1{k}==1]);
               implies(B1{k}(2),[ dis12{k} <=0,     b1{k}==0]) ];
 
-          
 constraints = [constraints,  Aa1(k)*( Bb1(k) *(Ds - dis12{k+1}) + (1 - Bb1(k)) * (Ds + dis12{k+1})) <= 0 ];
 
 % %.........................Lateral distance...............................
@@ -356,171 +512,44 @@ constraints = [constraints, sum(N3{k})==1,
           
 constraints = [constraints, Ss3(k)*(Nn3(k))*(z{k+1} - z{k})==0];
 
-
-
-
-    % It is EXTREMELY important to add as many
-    % constraints as possible to the binary variables
-    
-end
-
-objective = objective+(v{N+1}-Vd)'*Q*(v{N+1}-Vd) + (z{N+1}-Zd)'*R*(z{N+1}-Zd); % calculate obj
-
-parameters_in = { Vd, Zd, v{1}, p_z, ...
-    v_2, z_2, dis12{1}, Aa1, Bb1, Ss1, Nn1, ...
-    v_3, z_3, dis13{1}, Aa2, Bb2, Ss2, Nn2, ...
-    v_4, z_4, dis14{1}, Aa3, Bb3, Ss3, Nn3};
-
-solutions_out = {[a{:}], [z{:}], [v{:}], [a1{:}],  [b1{:}] ,  [s1{:}], [n1{:}],...
-    [a2{:}],  [b2{:}] ,  [s2{:}], [n2{:}],...
-    [a3{:}],  [b3{:}] ,  [s3{:}], [n3{:}]};
-
-controller3 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),parameters_in,solutions_out);
-
-%% making the optimizer with 2 node and obstacle
-constraints = [];
-constraints = [constraints,  diff([p_z z{1}]) == 0];
-objective   = 0;
-constraints = [constraints, [1 <= z{1}    <=   L   ]];
-constraints = [constraints,  1 <=    z_2      <= L];
-constraints = [constraints,  1 <=    z_3      <= L];  
-constraints = [constraints,  1 <=    z_obs      <= L];  
-constraints = [constraints, [dis12{1} <= 1000]]; 
-constraints = [constraints, [dis13{1} <= 1000]]; 
-constraints = [constraints, [dis_obs{1} <= 1000]];
-
-for k = 1:N
- objective = objective+( v{k+1}-Vd )'*Q*( v{k+1}-Vd ) + (z{k+1} - Zd)'*R*(z{k+1} - Zd); % calculate obj
-
-  % Feasible region
-    constraints = [constraints,1 <=    z{k+1}   <= L,
-                                0<=    v{k+1}   <= V_max,   %no exceda las velocidades 
-                     z{k}-[p_max]<=    z{k+1}   <=z{k}+[p_max], %paso de un carril
-                           -A_max<=    a{k}     <= A_max];
-    constraints = [constraints, -1 <= [z{k+1} - z{k}] <= 1];
-    constraints = [constraints, v{k+1} == v{k} + T*a{k}];             %velocidad futura
-
-   
-% ---------------------------------------vehiculo 2-------------------------------    
-% ------------------ si dz=0  -------------------->>>    dij >= Ds----------------
-
-    constraints = [constraints, -1000  <=  dis12{k+1} <= 1000];
-    constraints = [constraints,  mmin  <= z_2-z{k+1}  <= Mmax];
-    constraints = [constraints, dis12{k+1} == dis12{k} + T*(v_2-v{k})];
-
-%.........................alpha...............................
-
-constraints = [constraints, [D1{k}(1)+D1{k}(2)+D1{k}(3)==1],... 
-              implies( D1{k}(1), [  z_2-z{k} <=-0.01 ,        a1{k}==0   ]);
-              implies( D1{k}(2), [  -0.01<= z_2-z{k} <=0.01,  a1{k}==1   ]);
-              implies( D1{k}(3), [  0.01 <= z_2-z{k},         a1{k}==0   ]) ];
-
-%................................... Beta ....................................
-constraints = [constraints, [sum(B1{k})==1],... 
-              implies(B1{k}(1),[ dis12{k} >=0,     b1{k}==1]);
-              implies(B1{k}(2),[ dis12{k} <=0,     b1{k}==0]) ];
-
-
-constraints = [constraints,  Aa1(k)*( Bb1(k) *(Ds - dis12{k+1}) + (1-Bb1(k)) * (Ds + dis12{k+1})) <= 0 ];
-
-%.............................Lateral distance..................................
-
-constraints = [constraints, [sum(S1{k})==1],
-    implies( S1{k}(1), [ s1{k} == 0,        z_2-z{k} <= -1.001 ]  );
-    implies( S1{k}(2), [ s1{k} == 1,        z_2-z{k} == -1 ]  );
-    implies( S1{k}(3), [ s1{k} == 0,   -0.999 <= z_2-z{k} <= 0.999 ]  );
-    implies( S1{k}(4), [ s1{k} == 1,         z_2-z{k} == 1 ]  );
-    implies( S1{k}(5), [ s1{k} == 0,      1.001 <= z_2-z{k} ]) ]  ;
-
-%.........................lateral safety distance...............................
-constraints = [constraints, sum(N1{k})==1,
-    implies( N1{k}(1), [        dis12{1} <= -Dl ,     n1{k}==0 ] );
-    implies( N1{k}(2), [  -Dl<= dis12{1} <= Dl,       n1{k}==1 ] );
-    implies( N1{k}(3), [   Dl<= dis12{1}  ,           n1{k}==0 ] ) ];
-
-
-constraints = [constraints, Ss1(k)*(Nn1(k))*(z{k+1}-z{k})==0];
-
-
-
-% --------------------------------------- vehiculo 3 -------------------------------    
-% ------------------ si dz=0  -------------------->>>    dij >= Ds -----------------
-
-    constraints = [constraints, -1000  <=  dis13{k+1} <= 1000];
-    constraints = [constraints,    mmin  <= z_3-z{k+1}  <= Mmax];
-    constraints = [constraints, dis13{k+1} == dis13{k} + T*(v_3-v{k})];
-
-%.........................alpha...............................
-
-constraints = [constraints, [D2{k}(1)+D2{k}(2)+D2{k}(3)==1],... 
-              implies( D2{k}(1), [  z_3-z{k} <=-0.01 ,       a2{k}==0    ]);
-              implies( D2{k}(2), [  -0.01<= z_3-z{k} <=0.01,  a2{k}==1   ]);
-              implies( D2{k}(3), [  0.01 <= z_3-z{k},        a2{k}==0    ]) ];
-
-%................................... Beta ....................................
-constraints = [constraints, [sum(B2{k})==1],... 
-              implies(B2{k}(1),[ dis13{k} >=0,     b2{k}==1]);
-              implies(B2{k}(2),[ dis13{k} <=0,     b2{k}==0]) ];
-
-constraints = [constraints,  Aa2(k)*( Bb2(k) *(Ds - dis13{k+1}) + (1-Bb2(k)) * (Ds + dis13{k+1})) <= 0 ];
-
-% %.........................Lateral distance...............................
-
-constraints = [constraints, [sum(S2{k})==1], 
-              implies( S2{k}(1), [ s2{k} == 0,        z_3-z{k} <= -1.1 ]  );
-              implies( S2{k}(2), [ s2{k} == 1,        z_3-z{k} == -1 ]  );
-              implies( S2{k}(3), [ s2{k} == 0,   -0.999 <= z_3-z{k} <= 0.999 ]  );
-              implies( S2{k}(4), [ s2{k} == 1,         z_3-z{k} == 1 ]  );
-              implies( S2{k}(5), [ s2{k} == 0,    1.001 <= z_3-z{k} ]) ]  ;   
-
-%.........................lateral safety distance...............................
-constraints = [constraints, sum(N2{k})==1, 
-              implies( N2{k}(1), [        dis13{1} <= -Dl ,     n2{k}==0 ] );
-              implies( N2{k}(2), [  -Dl<= dis13{1} <= Dl,       n2{k}==1 ] );
-              implies( N2{k}(3), [   Dl<= dis13{1}  ,           n2{k}==0 ] ) ];   
- 
-
-constraints = [constraints, Ss2(k)*(Nn2(k))*(z{k+1}-z{k})==0];
-
-
-% --------------------------------------- OBSTACLE -------------------------------    
-% ------------------ si dz=0  -------------------->>>    dij >= Ds -----------------
-
-    constraints = [constraints, -1000  <=  dis_obs{k+1} <= 1000];
-    constraints = [constraints,    mmin  <= z_obs-z{k+1}  <= Mmax];
-    constraints = [constraints, dis_obs{k+1} == dis_obs{k} + T*(-v{k})];
-
-%.........................alpha...............................
-
-constraints = [constraints, [D0{k}(1)+D0{k}(2)+D0{k}(3)==1],... 
-              implies( D0{k}(1), [  z_obs-z{k} <=-0.01 ,        a0{k}==0    ]);
-              implies( D0{k}(2), [  -0.01<= z_obs-z{k} <=0.01,  a0{k}==1   ]);
-              implies( D0{k}(3), [  0.01 <= z_obs-z{k},         a0{k}==0    ]) ];
-
-%................................... Beta ....................................
-constraints = [constraints, [sum(B2{k})==1],... 
-              implies(B2{k}(1),[ dis_obs{k} >=0,     b2{k}==1]);
-              implies(B2{k}(2),[ dis_obs{k} <=0,     b2{k}==0]) ];
-
-% constraints = [constraints,  Aa0(k)*(Ds - dis_obs{k+1}) <= 0 ];
-
-% %.........................Lateral distance...............................
-
-constraints = [constraints, [sum(S0{k})==1], 
-              implies( S0{k}(1), [ s0{k} == 0,             z_obs - z{k+1} <= -1.1 ]  );
-              implies( S0{k}(2), [ s0{k} == 1,             z_obs - z{k+1} == -1 ]  );
-              implies( S0{k}(3), [ s0{k} == 0,   -0.999 <= z_obs - z{k+1} <= 0.999 ]  );
-              implies( S0{k}(4), [ s0{k} == 1,               z_obs-z{k+1} == 1 ]);
-              implies( S0{k}(5), [ s0{k} == 0,         1.001 <= z_obs - z{k+1} ]) ]  ;   
-
-%.........................lateral safety distance...............................
-constraints = [constraints, sum(N0{k})==1, 
-              implies( N0{k}(1), [        dis_obs{1} <= -Dl ,     n0{k}==0 ] );
-              implies( N0{k}(2), [  -Dl<= dis_obs{1} <= Dl,       n0{k}==1 ] );
-              implies( N0{k}(3), [   Dl<= dis_obs{1}  ,           n0{k}==0 ] ) ];   
- 
-
-constraints = [constraints, Ss0(k)*(Nn0(k))*(z{k+1}-z_obs)==1];
+% % --------------------------------------- OBSTACLE -------------------------------    
+% % ------------------ si dz=0  -------------------->>>    dij >= Ds -----------------
+% 
+%     constraints = [constraints, -1000  <=  dis_obs{k+1} <= 1000];
+%     constraints = [constraints,    mmin  <= z_obs-z{k+1}  <= Mmax];
+%     constraints = [constraints, dis_obs{k+1} == dis_obs{k} + T*(-v{k})];
+% 
+% %.........................alpha...............................
+% 
+% constraints = [constraints, [D0{k}(1)+D0{k}(2)+D0{k}(3)==1],... 
+%               implies( D0{k}(1), [  z_obs-z{k} <=-0.01 ,        a0{k}==0    ]);
+%               implies( D0{k}(2), [  -0.01<= z_obs-z{k} <=0.01,  a0{k}==1   ]);
+%               implies( D0{k}(3), [  0.01 <= z_obs-z{k},         a0{k}==0    ]) ];
+% 
+% %................................... Beta ....................................
+% constraints = [constraints, [sum(B2{k})==1],... 
+%               implies(B2{k}(1),[ dis_obs{k} >=0,     b2{k}==1]);
+%               implies(B2{k}(2),[ dis_obs{k} <=0,     b2{k}==0]) ];
+% 
+% % constraints = [constraints,  Aa0(k)*(Ds - dis_obs{k+1}) <= 0 ];
+% 
+% % %.........................Lateral distance...............................
+% 
+% constraints = [constraints, [sum(S0{k})==1], 
+%               implies( S0{k}(1), [ s0{k} == 0,             z_obs - z{k+1} <= -1.1 ]  );
+%               implies( S0{k}(2), [ s0{k} == 1,             z_obs - z{k+1} == -1 ]  );
+%               implies( S0{k}(3), [ s0{k} == 0,   -0.999 <= z_obs - z{k+1} <= 0.999 ]  );
+%               implies( S0{k}(4), [ s0{k} == 1,               z_obs-z{k+1} == 1 ]);
+%               implies( S0{k}(5), [ s0{k} == 0,         1.001 <= z_obs - z{k+1} ]) ]  ;   
+% 
+% %.........................lateral safety distance...............................
+% constraints = [constraints, sum(N0{k})==1, 
+%               implies( N0{k}(1), [        dis_obs{1} <= -Dl ,     n0{k}==0 ] );
+%               implies( N0{k}(2), [  -Dl<= dis_obs{1} <= Dl,       n0{k}==1 ] );
+%               implies( N0{k}(3), [   Dl<= dis_obs{1}  ,           n0{k}==0 ] ) ];   
+%  
+% 
+% % constraints = [constraints, Ss0(k)*(Nn0(k))*(z{k+1}-z_obs)==1];
 
 
     % It is EXTREMELY important to add as many
@@ -535,11 +564,13 @@ objective = objective + (v{N+1} - Vd)'*Q*(v{N+1} - Vd) + (z{N+1} - Zd)'*R*(z{N+1
 parameters_in = { Vd , Zd , v{1} , p_z , ...
     v_2 , z_2 , dis12{1} , Aa1 , Bb1 , Ss1 , Nn1, ...
     v_3 , z_3 , dis13{1} , Aa2 , Bb2 , Ss2 , Nn2, ...
-        z_obs , dis_obs{1} , Ss0 , Nn0};
+    v_4 , z_4 , dis14{1} , Aa3 , Bb3 , Ss3 , Nn3, ...
+        z_obs , dis_obs{1},           Ss0 , Nn0};
 
-solutions_out = {[a{:}], [z{:}], [v{:}], [a1{:}],  [b1{:}] ,  [s1{:}], [n1{:}], ...
-                    [a2{:}], [b2{:}], [s2{:}], [n2{:}], ...
-                                      [s0{:}], [n0{:}]};
+solutions_out = {[a{:}], [z{:}], [v{:}], [a1{:}],  [b1{:}], [s1{:}], [n1{:}], ...
+                                          [a2{:}], [b2{:}], [s2{:}], [n2{:}], ...
+                                          [a3{:}], [b3{:}], [s3{:}], [n3{:}], ...
+                                                            [s0{:}], [n0{:}]};
 
 controller4 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),parameters_in,solutions_out);
 
@@ -591,24 +622,24 @@ vp5hist=[];   zp5hist=[];
 i=0;
 %% online optimization
 %------condiciones iniciales----------
-vel= [20; 20; 20; 20; 20; 0];% velociodad inicial
-Vdes=[50; 80; 80; 80; 80; 0]; %velocidad deseada
+vel= [10; 10; 10; 10; 10; 0];% velociodad inicial
+Vdes=[30; 80; 80; 80; 80; 0]; %velocidad deseada
 
-zel= [2; 3; 1; 3; 1];   %carril inicial
+zel= [2; 5; 5; 3; 1];   %carril inicial
 % Zdes=[1; 5; 3; 4; 2];   %carril deseado
 acel=[0 0 0 0 0 0]';      %aceleracion inicial
-zel_obs = [2];
+zel_obs = [3];
 
 % %------condiciones iniciales----------
 % vel= [20; 20; 20; 20; 20; 0];% velociodad inicial
 % Vdes=[30; 70; 70; 70; 70; 0]; %velocidad deseada
 % 
 % zel= [3; 4; 2; 1; 4];   %carril inicial
-Zdes=[2; 2; 2; 2; 2];   %carril deseado
+Zdes=[2; 1; 3; 3; 1];   %carril deseado
 % acel=[10 10 10 10 10 0]';      %aceleracion inicial
 % zel_obs = [2];
 %---distancia inicial de cada agente
-d1i = [-60 -110 -80 -160 200]';
+d1i = [-40 -100 -70 -120 200]';
 
 
 
@@ -624,22 +655,21 @@ dhist = d1i;
 mpciter = 0;
 
 
-sim_tim = 28; % Maximum simulation time
+sim_tim = 13; % Maximum simulation time
 tic
 
 % for ii = 1 : 30
 while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > epsilon && mpciter < sim_tim
     i=i+1;
-    
-    
+
     %.........................      solver vehiculo 1       ............................
     
     inputs1 = {Vdes(1), Zdes(1), vel(1), zel(1), ...
         vel(2), zel(2), d1i(1), alogic1_1, blogic1_1, S1logic_1, N1logic_1,...
-        vel(3), zel(3), d1i(2), alogic2_1, blogic2_1, S2logic_1, N2logic_1,...
-        vel(4), zel(4), d1i(3), alogic3_1, blogic3_1, S3logic_1, N3logic_1};
-    %          zel_obs, d1i(5), S0logic_1, N0logic_1};
-    [solutions1,diagnostics] = controller3{inputs1};
+        vel(3), zel(3), d1i(2), alogic2_1, blogic2_1, S2logic_1, N2logic_1};
+%         vel(4), zel(4), d1i(3), alogic3_1, blogic3_1, S3logic_1, N3logic_1};
+%                zel_obs, d1i(5),                       S0logic_1, N0logic_1};
+    [solutions1,diagnostics] = controller2{inputs1}; %Tipo de controlador de segun el # de nodos
     
     A =  solutions1{1};         acel(1) = A(:,1);
     Z =  solutions1{2};         zel(1)=Z(:,2);                  zp1hist=[zp1hist; Z];
@@ -654,14 +684,14 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
     S2 = solutions1{10};        S2logic_1 = [S2(2:N) 1];
     Nn2 = solutions1{11};       N2logic_1 = Nn2;
     
-    Aa3 = solutions1{12};       alogic3_1 = Aa3;
-    B3 = solutions1{13};        blogic3_1 = B3;
-    S3 = solutions1{14};        S3logic_1 = [S3(2:N) 1];
-    Nn3 = solutions1{15};       N3logic_1 = Nn3;
+%     Aa3 = solutions1{12};       alogic3_1 = Aa3;
+%     B3 = solutions1{13};        blogic3_1 = B3;
+%     S3 = solutions1{14};        S3logic_1 = [S3(2:N) 1];
+%     Nn3 = solutions1{15};       N3logic_1 = Nn3;
+%     
+%     S0 = solutions1{16};        S0logic_1 = [S0(2:N) 1];
+%     Nn0 = solutions1{17};       N0logic_1 = Nn0;
     
-    %     S0 = solutions1{12};        S0logic_1 = [S0(2:N) 1];
-    %     Nn0 = solutions1{13};       N0logic_1 = Nn0;
-    %
     if diagnostics == 1
         error('you are close, keep trying 1');
     end
@@ -804,8 +834,7 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
     zhist = [zhist zel];
     ahist = [ahist acel];
     dhist = [dhist d1i];
-    
-    %     pause(0.05)
+   
     
     mpciter
     mpciter = mpciter + 1;
