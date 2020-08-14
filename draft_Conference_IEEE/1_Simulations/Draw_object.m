@@ -1,10 +1,10 @@
-function Draw_object(vhist,zhist,vphist,zphist,dhist,T)
+function Draw_object(vhist,zhist,vphist,zphist,dhist,T,delay_time)
 
 
 N = size(vphist,2)-1;%Horizonte de prediccion
 V = size(vphist,3);%numero de vehiculos
 
-% vp1hist = [];
+% vp1hist =
 
 set(0,'DefaultAxesFontName', 'Times New Roman')
 set(0,'DefaultAxesFontSize', 12)
@@ -121,8 +121,10 @@ hold on;
     %figure(500)
     ylabel('$y$-position (m)','interpreter','latex','FontSize',fontsize_labels)
     xlabel('$x$-position (m)','interpreter','latex','FontSize',fontsize_labels)
-    axis([-100 300 -0.2 6])%descripcion de los ejes
-    pause(0.3)
+    axis([-150 300 -0.2 6])%descripcion de los ejes
+%     axis([-100 300 -0.2 6])
+    
+    pause(delay_time)
     box on;
     grid on
     %aviobj = addframe(aviobj,gcf);
