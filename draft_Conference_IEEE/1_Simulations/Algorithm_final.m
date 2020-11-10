@@ -134,7 +134,7 @@ constraints = [constraints, [sum(S1{k})==1],
 
 %.........................lateral safety distance...............................
 constraints = [constraints, sum(N1{k})==1, 
-              implies( N1{k}(1), [        dis12{1} <= -Dl ,     n1{k}==0 ] );
+              implies( N1{k}(   1), [        dis12{1} <= -Dl ,     n1{k}==0 ] );
               implies( N1{k}(2), [  -Dl<= dis12{1} <= Dl,       n1{k}==1 ] );
               implies( N1{k}(3), [   Dl<= dis12{1}  ,           n1{k}==0 ] ) ];   
  
@@ -280,9 +280,6 @@ solutions_out = {[a{:}], [z{:}], [v{:}], [a1{:}],  [b1{:}] ,  [s1{:}], [n1{:}],.
 
 controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),parameters_in,solutions_out);
 
-
-
-
 %% Building variables
 
 %define las condiciones iniciales que deben tener las variables
@@ -319,7 +316,7 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
  S2logic_3=[ones(1,N)]; 
  N2logic_3=[ones(1,N)];   
  
-  %..................... vehiculo 4 ..........................
+%..................... vehiculo 4 ..........................
  
  alogic1_4=[zeros(1,N)]; 
  blogic1_4=[ones(1,N)];  
@@ -340,10 +337,6 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
  G2logic_5=[ones(1,N)];     
  S2logic_5=[ones(1,N)]; 
  N2logic_5=[ones(1,N)];   
- 
- 
-
- 
 
 % ..........historial de las predicciones 
  vp1hist=[];  
@@ -366,7 +359,7 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
 vel= [20; 20; 20; 20; 20];% velociodad inicial
 Vdes=[30; 60; 60; 20; 10]; %velocidad deseada
 
-zel= [3; 4; 3; 3; 2]; %carril inicial
+zel= [5; 4; 5; 3; 2]; %carril inicial
 Zdes=[3; 3; 3; 3; 4]; %carril deseado
 
 
@@ -391,6 +384,8 @@ i=0;
 
  time=20;
  tic
+ sim_tim = 20;
+ 
  
 % for ii = 1 : 30
 while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > epsilon && mpciter < sim_tim / T
@@ -527,10 +522,10 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
     zhist = [zhist zel];
     ahist = [ahist acel];
     dhist = [dhist d1i];
-
+    
 %     pause(0.05)   
 
-mpciter
+mpciter;
 mpciter = mpciter + 1;
 end
 toc
@@ -540,5 +535,5 @@ disp("it's done")
 vphist=cat(3, vp1hist , vp2hist, vp3hist, vp4hist, vp5hist);
 zphist=cat(3, zp1hist , zp2hist, zp3hist, zp4hist, zp5hist);
 
-Draw_object(vhist,zhist,vphist,zphist,dhist,T)
+Draw_object(vhist,zhist,vphist,zphist,dhist,T, 1)
 % save('myFile5.mat','vhist','zhist','vphist','zphist','dhist','T')

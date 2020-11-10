@@ -1,0 +1,1 @@
+function constraints = logic_or(constraints, l_delta1{k}, ll{k} , lr{k} );
