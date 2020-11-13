@@ -30,9 +30,9 @@ R = 10*eye(1);
 N = 3;%horizon
 T = 0.1; %[s]
 Ds=15;%Safety distance [m]
-Dl=15; %lateral distance
+Dl=25; %lateral distance
 V_max=80;
-A_max=10;
+A_max=30;
 L=6;%number of lanes
 Mmax=L-1;
 mmin=-L+1;
@@ -54,13 +54,13 @@ v_2 = sdpvar(1,1);  v_3 = sdpvar(1,1);  %velocidad del otro vehculo
 z_2 = sdpvar(1,1);  z_3 = sdpvar(1,1);  %carril del vehiculo j
 
 dis12 = sdpvar(ones(1,N+1),ones(1,N+1));  %distancia entre vehiculo 1 y 2
-dis13 = sdpvar(ones(1,N+1),ones(1,N+1));  %distancia entre vehiculo 1 y 2
 
-a1 = binvar(ones(1,N),ones(1,N));    a2 = binvar(ones(1,N),ones(1,N));
-b1 = binvar(ones(1,N),ones(1,N));    b2 = binvar(ones(1,N),ones(1,N));    
-g1 = binvar(ones(1,N),ones(1,N));    g2 = binvar(ones(1,N),ones(1,N));    
-s1 = binvar(ones(1,N),ones(1,N));    s2 = binvar(ones(1,N),ones(1,N));    
-n1 = binvar(ones(1,N),ones(1,N));    n2 = binvar(ones(1,N),ones(1,N));    
+
+% a1 = binvar(ones(1,N),ones(1,N));    a2 = binvar(ones(1,N),ones(1,N));
+% b1 = binvar(ones(1,N),ones(1,N));    b2 = binvar(ones(1,N),ones(1,N));    
+% g1 = binvar(ones(1,N),ones(1,N));    g2 = binvar(ones(1,N),ones(1,N));    
+% s1 = binvar(ones(1,N),ones(1,N));    s2 = binvar(ones(1,N),ones(1,N));    
+% n1 = binvar(ones(1,N),ones(1,N));    n2 = binvar(ones(1,N),ones(1,N));    
 
 l_alpha1 = binvar(ones(1,N),ones(1,N));     l_alpha2 = binvar(ones(1,N),ones(1,N));
 l_beta1 = binvar(ones(1,N),ones(1,N));      l_beta2 = binvar(ones(1,N),ones(1,N));    
@@ -68,7 +68,7 @@ l_gamma1 = binvar(ones(1,N),ones(1,N));     l_gamma2 = binvar(ones(1,N),ones(1,N
 l_delta1 = binvar(ones(1,N),ones(1,N));     l_delta2 = binvar(ones(1,N),ones(1,N));    
 l_zeta1 = binvar(ones(1,N),ones(1,N));      l_zeta2 = binvar(ones(1,N),ones(1,N));    
 l_eta1 = binvar(ones(1,N),ones(1,N));       l_eta2 = binvar(ones(1,N),ones(1,N));    
-l_theta1 = binvar(ones(1,N),ones(1,N));     l_theta2 = binvar(ones(1,N),ones(1,N));    
+l_theta1 = binvar(ones(1,N),ones(1,N));     l_theta2 = binvar(4*ones(1,N),ones(1,N));    
 l_chi1 = binvar(ones(1,N),ones(1,N));       l_chi2 = binvar(ones(1,N),ones(1,N));    
 l_psi1 = binvar(ones(1,N),ones(1,N));       l_psi2 = binvar(ones(1,N),ones(1,N));    
 
@@ -76,15 +76,22 @@ fij1 = sdpvar(ones(1,N),ones(1,N));       fij2 = sdpvar(ones(1,N),ones(1,N));
 gij1 = sdpvar(ones(1,N),ones(1,N));       gij2 = sdpvar(ones(1,N),ones(1,N));
 hij1 = sdpvar(ones(1,N),ones(1,N));       hij2 = sdpvar(ones(1,N),ones(1,N));
 
+kij1 = sdpvar(ones(1,N),ones(1,N));       kij2 = sdpvar(ones(1,N),ones(1,N));    
+mij1 = sdpvar(ones(1,N),ones(1,N));       mij2 = sdpvar(ones(1,N),ones(1,N));
+pij1 = sdpvar(ones(1,N),ones(1,N));       pij2 = sdpvar(ones(1,N),ones(1,N));
+qij1 = sdpvar(ones(1,N),ones(1,N));       qij2 = sdpvar(ones(1,N),ones(1,N));    
+roij1= sdpvar(ones(1,N),ones(1,N));       roij2 = sdpvar(ones(1,N),ones(1,N));    
+wij1 = sdpvar(ones(1,N),ones(1,N));       wij2 = sdpvar(ones(1,N),ones(1,N)); 
+rij1 = sdpvar(ones(1,N),ones(1,N));       rij2 = sdpvar(ones(1,N),ones(1,N)); 
+sij1 = sdpvar(ones(1,N),ones(1,N));       sij2 = sdpvar(ones(1,N),ones(1,N)); 
 
-
-
-Aa1 = binvar( 1,N );                Aa2 = binvar( 1,N );                
-Bb1 = binvar( 1,N );                Bb2 = binvar( 1,N );                
-Gg1 = binvar( 1,N );                Gg2 = binvar( 1,N );                
-Ss1 = binvar( 1,N );                Ss2 = binvar( 1,N );                
-Nn1 = binvar( 1,N );                Nn2 = binvar( 1,N );                
  
+% Aa1 = binvar( 1,N );                Aa2 = binvar( 1,N );                
+% Bb1 = binvar( 1,N );                Bb2 = binvar( 1,N );                
+% Gg1 = binvar( 1,N );                Gg2 = binvar( 1,N );                
+% Ss1 = binvar( 1,N );                Ss2 = binvar( 1,N );                
+% Nn1 = binvar( 1,N );                Nn2 = binvar( 1,N );                
+  
 A1 = binvar(3*ones(1,N),ones(1,N));  A2 = binvar(3*ones(1,N),ones(1,N));
 B1 = binvar(2*ones(1,N),ones(1,N));  B2 = binvar(2*ones(1,N),ones(1,N));  
 G1 = binvar(3*ones(1,N),ones(1,N));  G2 = binvar(3*ones(1,N),ones(1,N));  
@@ -132,9 +139,9 @@ for k = 1:N
     constraints = [constraints,   mmin  <= z_2-z{k+1}  <= Mmax];
     constraints = [constraints, dis12{k+1} == dis12{k} + T*(v_2-v{k})];
     constraints = [constraints, [dis12{1} <= 100000]]; 
-   
-    
-    
+
+
+
 %................................... alpha...............................
 constraints = log_eq(constraints, A1{k}, l_alpha1{k}, z_2-z{k} , 0);
 
@@ -148,7 +155,7 @@ constraints = log_eq(constraints, G1{k}, l_gamma1{k}, z_2-z{k+1},0);
 constraints = log_eq1(constraints, D1{k}, l_delta1{k}, z_2-z{k},1);
 
 %................................... Zeta ....................................
-% constraints = log_and(constraints, l_delta1{k}, lr{k} , lr{k} );
+% constraints = log_and(constraints, l_delta1{k}, ll{k}, lr{k});
 
 %................................... Eta ....................................
 constraints = log_or(constraints, N1{k}, l_eta1{k}, dis12{k}, Dl );
@@ -173,6 +180,38 @@ constraints = log_imp(constraints, hij1{k}, dis12{k}, l_alpha1{k});
 
 %................................... constraint (10a) .......................
 constraints = [constraints, -2*fij1{k} + gij1{k} + hij1{k} <= 0];
+
+%................................... Kij ....................................
+constraints = log_imp(constraints, kij1{k}, v_2-v{k}, l_chi1{k});
+
+%................................... Mij ....................................
+constraints = log_imp(constraints, mij1{k}, dis12{k}, l_chi1{k});
+
+%................................... Pij ....................................
+constraints = log_imp(constraints, pij1{k}, v_2-v{k}, l_psi1{k});
+
+%................................... Qij ....................................
+constraints = log_imp(constraints, qij1{k}, dis12{k}, l_psi1{k});
+
+%................................... Constraint (10b) ....................................
+constraints = [constraints, -2*(T*kij1{k} + mij1{k}) + qij1{k} + T*pij1{k} <= 0];
+
+%......................................... Ro ...........................................
+constraints = log_and(constraints, roij1{k}, l_delta1{k} , l_chi1{k} );
+
+%....................................... Omega ........................................
+constraints = log_and(constraints, wij1{k}, v_2-v{k}, l_eta1{k} );
+
+%................................... constraint 33 ....................................
+constraints = [constraints, -sij1{k} + rij1{k} <= 0 ;
+                             sij1{k} - rij1{k} <= 0 ];
+
+%....................................... Rij ........................................
+constraints = log_imp(constraints, rij1{k},  z{k},  wij1{k} );
+
+%....................................... Sij ........................................
+constraints = log_imp(constraints, sij1{k}, z{k+1}, wij1{k} );
+
 
 %................................... constraint (10a) ....................................
 % constraints = [constraints, l_delta1{k}*lr{k}*l_eta1{k}*() == 0];
@@ -226,12 +265,12 @@ vel= [20; 20];% velociodad inicial
 Vdes=[30; 80]; %velocidad deseada
 
 zel= [5; 4]; %carril inicial
-Zdes=[2; 2]; %carril deseado
+Zdes=[3; 1]; %carril deseado
 
 
 acel=[0 0]';
 %---distancia inicial de cada agente
-d1i = [-18]';0
+d1i = [-10]';
 
 % hold on
 vhist = vel;
@@ -282,7 +321,7 @@ hij2_hist = [];
  sim_tim = 20;
  
  
-for i = 1 : 37
+for i = 1 : 50
 % while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > epsilon && mpciter < sim_tim / T
  i=i+1;
 %.........................      solver vehiculo 1       ............................
@@ -377,5 +416,5 @@ disp("it's done")
 vphist=cat(3, vp1hist , vp2hist);
 zphist=cat(3, zp1hist , zp2hist);
 
- Draw_object(vhist,zhist,vphist,zphist,dhist,T, 0.2)
+ Draw_object(vhist,zhist,vphist,zphist,dhist,T, 0)
 % save('myFile5.mat','vhist','zhist','vphist','zphist','dhist','T')
