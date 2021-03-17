@@ -1,4 +1,4 @@
-function Draw_object(vhist,zhist,vphist,zphist,dhist,T,delay_time)
+function Draw_object(name,vhist,zhist,vphist,zphist,dhist,T,delay_time)
 
 
 N = size(vphist,2)-1;%Horizonte de prediccion
@@ -114,7 +114,7 @@ hold on;
     plot(x(1,k,5)+x_circle,y(5)+y_circle,'--m')% plot robot circle
     
     
- filename = 'MPC2.gif';% <---------------------------------------------------------------------------------------------------------------
+ filename = name+'.gif';% <---------------------------------------------------------------------------------------------------------------
     
     
    hold off

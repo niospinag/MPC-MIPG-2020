@@ -360,7 +360,7 @@ vel= [20; 20; 20; 20; 20];% velociodad inicial
 Vdes=[30; 60; 60; 20; 10]; %velocidad deseada
 
 zel= [5; 4; 5; 3; 2]; %carril inicial
-Zdes=[3; 3; 3; 3; 4]; %carril deseado
+Zdes=[3; 3; 3; 3; 3]; %carril deseado
 
 
 acel=[0 0 0 0 0]';
@@ -390,6 +390,21 @@ i=0;
 % for ii = 1 : 30
 while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > epsilon && mpciter < sim_tim / T
  i=i+1;
+ 
+
+  if i > 15 && i < 40
+    Vdes=[30; 30; 30; 40; 40]; %velocidad deseada 
+    Zdes=[1; 1; 1; 4; 4]; %carril deseado 
+ else if i>=40
+     Vdes=[20; 20; 20; 20; 20]; %velocidad deseada 
+    Zdes=[2; 2; 2; 2; 2]; %carril deseado     
+     
+     end
+ end
+ 
+
+ 
+ 
 %.........................      solver vehiculo 1       ............................
 
 
@@ -523,7 +538,10 @@ while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > e
     ahist = [ahist acel];
     dhist = [dhist d1i];
     
-%     pause(0.05)   
+   
+
+
+
 
 mpciter;
 mpciter = mpciter + 1;
@@ -532,8 +550,15 @@ toc
 
 disp("it's done")
 
+%% Show results
+name = "simulation1"
+
 vphist=cat(3, vp1hist , vp2hist, vp3hist, vp4hist, vp5hist);
+
 zphist=cat(3, zp1hist , zp2hist, zp3hist, zp4hist, zp5hist);
 
-Draw_object(vhist,zhist,vphist,zphist,dhist,T, 1)
-% save('myFile5.mat','vhist','zhist','vphist','zphist','dhist','T')
+Draw_object(name,vhist,zhist,vphist,zphist,dhist,T, 0.05)
+save_data(name,vhist,zhist,vphist,zphist,dhist,T)
+
+% save('myFile1.mat','vhist','zhist','vphist','zphist','dhist','T')
+
