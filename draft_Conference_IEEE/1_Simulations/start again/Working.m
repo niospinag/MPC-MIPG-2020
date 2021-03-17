@@ -4,6 +4,7 @@
 clear 
 close all
 clc
+
 %----------pc casa
 %  addpath('C:\gurobi811\win64\matlab') %Gurobi
 
@@ -34,9 +35,9 @@ Dl=25; %lateral distance
 V_max=80;
 A_max=30;
 L=6;%number of lanes
-Mmax=L-1;
-mmin=-L+1;
-p_max=1;
+Mmax = L-1;
+mmin = -L+1;
+p_max = 1;
 
 
 %------------estados deseados-----------
@@ -50,17 +51,13 @@ z = intvar(ones(1,N+1),ones(1,N+1)); %carril actual
 ll = binvar(ones(1,N),ones(1,N)); %paso izquierda
 lr = binvar(ones(1,N),ones(1,N)); %paso derecha
 
+lr2 = binvar(1,1); %paso derecha
+
+
 v_2 = sdpvar(1,1);  v_3 = sdpvar(1,1);  %velocidad del otro vehculo
 z_2 = sdpvar(1,1);  z_3 = sdpvar(1,1);  %carril del vehiculo j
 
 dis12 = sdpvar(ones(1,N+1),ones(1,N+1));  %distancia entre vehiculo 1 y 2
-
-
-% a1 = binvar(ones(1,N),ones(1,N));    a2 = binvar(ones(1,N),ones(1,N));
-% b1 = binvar(ones(1,N),ones(1,N));    b2 = binvar(ones(1,N),ones(1,N));    
-% g1 = binvar(ones(1,N),ones(1,N));    g2 = binvar(ones(1,N),ones(1,N));    
-% s1 = binvar(ones(1,N),ones(1,N));    s2 = binvar(ones(1,N),ones(1,N));    
-% n1 = binvar(ones(1,N),ones(1,N));    n2 = binvar(ones(1,N),ones(1,N));    
 
 l_alpha1 = binvar(ones(1,N),ones(1,N));     l_alpha2 = binvar(ones(1,N),ones(1,N));
 l_beta1 = binvar(ones(1,N),ones(1,N));      l_beta2 = binvar(ones(1,N),ones(1,N));    
@@ -155,7 +152,7 @@ constraints = log_eq(constraints, G1{k}, l_gamma1{k}, z_2-z{k+1},0);
 constraints = log_eq1(constraints, D1{k}, l_delta1{k}, z_2-z{k},1);
 
 %................................... Zeta ....................................
-% constraints = log_and(constraints, l_delta1{k}, ll{k}, lr{k});
+% constraints = log_and(constraints, l_delta1{k}, ll{k}, lr2);
 
 %................................... Eta ....................................
 constraints = log_or(constraints, N1{k}, l_eta1{k}, dis12{k}, Dl );
@@ -196,7 +193,7 @@ constraints = log_imp(constraints, qij1{k}, dis12{k}, l_psi1{k});
 %................................... Constraint (10b) ....................................
 constraints = [constraints, -2*(T*kij1{k} + mij1{k}) + qij1{k} + T*pij1{k} <= 0];
 
-%......................................... Ro ...........................................
+%......................................... Ro ........................................
 constraints = log_and(constraints, roij1{k}, l_delta1{k} , l_chi1{k} );
 
 %....................................... Omega ........................................
@@ -207,18 +204,15 @@ constraints = [constraints, -sij1{k} + rij1{k} <= 0 ;
                              sij1{k} - rij1{k} <= 0 ];
 
 %....................................... Rij ........................................
-constraints = log_imp(constraints, rij1{k},  z{k},  wij1{k} );
+constraints = log_imp(constraints, rij1{k},  z{k},   wij1{k} );
 
 %....................................... Sij ........................................
-constraints = log_imp(constraints, sij1{k}, z{k+1}, wij1{k} );
-
+constraints = log_imp(constraints, sij1{k}, z{k+1},  wij1{k} );
 
 %................................... constraint (10a) ....................................
 % constraints = [constraints, l_delta1{k}*lr{k}*l_eta1{k}*() == 0];
 
-          %USAR FUNCIONES PARA CREAR LOS CONDICIONALES
-          %GUARDAR TODO EN UN VECTOR Y LUEGO ACTUALIZARLO, PARA HACER EL
-          %CONTROL DISTRIBUIDO AL MISMO TIEMPO
+
           
 %           
 
@@ -233,7 +227,7 @@ objective = objective+( v{N+1}-Vd )'*Q*( v{N+1}-Vd ) + (z{N+1} - Zd)'*R*(z{N+1} 
 %% solver definition 2 node  
 
 parameters_in = { Vd , Zd , v{1} , z{1} , ...
-                            v_2 , z_2 , dis12{1} } ;%, Aa1 , Bb1 , Ss1 , Nn1};%, Gg1
+                            v_2 , z_2 , dis12{1}, lr2 } ;%, Aa1 , Bb1 , Ss1 , Nn1};%, Gg1
                          
                             
 solutions_out = {[a{:}], [z{:}], [v{:}], [l_alpha1{:}] ,[l_beta1{:}] ...
@@ -265,12 +259,12 @@ vel= [20; 20];% velociodad inicial
 Vdes=[30; 80]; %velocidad deseada
 
 zel= [5; 4]; %carril inicial
-Zdes=[3; 1]; %carril deseado
+Zdes=[2; 2]; %carril deseado
 
 
 acel=[0 0]';
 %---distancia inicial de cada agente
-d1i = [-10]';
+d1i = [-50]';
 
 % hold on
 vhist = vel;
@@ -308,27 +302,22 @@ hij1_hist = [];
 fij2_hist = [];
 gij2_hist = [];
 hij2_hist = [];
-
-
-
-% p_optima = ( Vdes(1)-Vdes(1) )'*Q*( Vdes(1)-Vdes(1) ) + (Zdes(1) - Zdes(1))'*R*(Zdes(1) - Zdes(1));
-% epsilon = 10^(-12);
  
  i=0;
  zel2 = zel;   %same dimentions
  time=20;
  tic
  sim_tim = 20;
- 
- 
-for i = 1 : 50
+ LR2 = [1]
+ LR1 = [1]
+for i = 1 : 25
 % while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > epsilon && mpciter < sim_tim / T
  i=i+1;
 %.........................      solver vehiculo 1       ............................
 
 
         inputs = {Vdes(1) , Zdes(1) , vel(1) , zel(1) , ...
-                   vel(2) , zel(2)  , d1i(1) };%, alogic1_1 , blogic1_1  , S1logic_1 , N1logic_1}; 
+                   vel(2) , zel(2)  , d1i(1), LR2};%, alogic1_1 , blogic1_1  , S1logic_1 , N1logic_1}; 
     [solutions1,diagnostics] = controller1{inputs};    
      
     A =  solutions1{1};         acel(1) = A(:,1);
@@ -344,7 +333,7 @@ for i = 1 : 50
     HH = solutions1{11};        theta1_hist = [theta1_hist; HH ];
     II = solutions1{12};        zeta1_hist = [zeta1_hist; II ];
     JJ = solutions1{13};        ll1_hist = [ll1_hist; JJ ];
-    KK = solutions1{14};        lr1_hist = [lr1_hist; KK ];
+    KK = solutions1{14};        LR1 = KK(:,1);                  lr1_hist = [lr1_hist; KK ];
     fij1_hist = [fij1_hist; solutions1{15} ];
     gij1_hist = [gij1_hist; solutions1{16} ];
     hij1_hist = [hij1_hist; solutions1{17} ];
@@ -362,7 +351,7 @@ for i = 1 : 50
 %.........................      solver vehiculo 2       ............................
 
         inputs = {Vdes(2) , Zdes(2) , vel(2) , zel(2) , ...
-                   vel(1) , zel(1)  , -d1i(1) };%, alogic1_2 , blogic1_2  , S1logic_2 , N1logic_2}; %G1logic_1
+                   vel(1) , zel(1)  , -d1i(1) , LR1};%, alogic1_2 , blogic1_2  , S1logic_2 , N1logic_2}; %G1logic_1
     [solutions2,diagnostics] = controller1{inputs};    
      
     A = solutions2{1};          acel(2) = A(:,1);
@@ -378,7 +367,7 @@ for i = 1 : 50
     HH = solutions2{11};        theta2_hist = [theta2_hist; HH ];
     II = solutions2{12};        zeta2_hist = [zeta2_hist; II ];
     JJ = solutions2{13};        ll2_hist = [ll2_hist; JJ ];
-    KK = solutions2{14};        lr2_hist = [lr2_hist; KK ];
+    KK = solutions2{14};        LR2 = KK(:,1);                  lr2_hist = [lr2_hist; KK ];
  
     fij2_hist = [fij2_hist; solutions2{15} ];
     gij2_hist = [gij2_hist; solutions2{16} ];
