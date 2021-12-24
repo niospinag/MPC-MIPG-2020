@@ -357,7 +357,7 @@ controller2 = optimizer(constraints, objective , sdpsettings('solver','gurobi'),
  
 %------condiciones iniciales----------
 vel= [20; 20; 20; 20; 20];% velociodad inicial
-Vdes=[30; 60; 60; 20; 10]; %velocidad deseada
+Vdes=[30; 60; 60; 20; 20]; %velocidad deseada
 
 zel= [5; 4; 5; 3; 2]; %carril inicial
 Zdes=[3; 3; 3; 3; 3]; %carril deseado
@@ -384,23 +384,31 @@ i=0;
 
  time=20;
  tic
- sim_tim = 20;
+ sim_tim = 10;
  
- 
+ %% Final solver
 % for ii = 1 : 30
-while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > epsilon && mpciter < sim_tim / T
- i=i+1;
+% while ( vel-Vdes )'*Q*( vel-Vdes ) + (zel - Zdes)'*R*(zel - Zdes) - p_optima > epsilon && mpciter < sim_tim / T
+% while mpciter < sim_tim / T
+for i = 1:60
+%  i=i+1;
  
 
-  if i > 15 && i < 40
-    Vdes=[30; 30; 30; 40; 40]; %velocidad deseada 
-    Zdes=[1; 1; 1; 4; 4]; %carril deseado 
- else if i>=40
-     Vdes=[20; 20; 20; 20; 20]; %velocidad deseada 
-    Zdes=[2; 2; 2; 2; 2]; %carril deseado     
+  if i >= 10 && i <35 
+    Vdes = [3; 50; 50; 50; 50]; %velocidad deseada 
+    Zdes = [3; 2; 2; 4; 4]; %carril deseado 
+  elseif i >= 35 && i <50  
+    Vdes = [20; 20; 20; 20; 20]; %velocidad deseada 
+    Zdes = [3; 3; 3; 4; 4]; %carril deseado     
      
-     end
- end
+  else %if i == 50
+    Vdes = [20; 20; 20; 20; 20]; %velocidad deseada 
+    Zdes = [3; 3; 3; 3; 3]; %carril deseado     
+    end    
+     
+     
+     
+ 
  
 
  

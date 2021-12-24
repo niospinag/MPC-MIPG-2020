@@ -212,7 +212,7 @@ constraints = log_imp(constraints, sij1{k}, z{k+1},  wij1{k} );
 %................................... constraint (10a) ....................................
 % constraints = [constraints, l_delta1{k}*lr{k}*l_eta1{k}*() == 0];
 
-
+implies
           
 %           
 
@@ -264,7 +264,7 @@ Zdes=[2; 2]; %carril deseado
 
 acel=[0 0]';
 %---distancia inicial de cada agente
-d1i = [-50]';
+d1i = [-30]';
 
 % hold on
 vhist = vel;

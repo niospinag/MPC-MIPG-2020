@@ -1,6 +1,6 @@
 function save_data(name,vhist,zhist,vphist,zphist,dhist,T)
 % GET POSITIONS OF ALL AGENTS
-load("myFile1.mat")
+% load("myFile1.mat")
 
 Number_agents = size(vhist,1);
 steps = size(vhist,2);
